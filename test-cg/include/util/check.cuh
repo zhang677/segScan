@@ -17,6 +17,17 @@ const int RefThreadPerBlock = 256;
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
 
+
+#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
+{
+  if (code != cudaSuccess)
+  {
+    fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
+    if (abort) exit(code);
+  }
+}
+
 #define checkCuSparseError(a)                                                  \
   do {                                                                         \
     if (CUSPARSE_STATUS_SUCCESS != (a)) {                                      \
@@ -48,10 +59,8 @@ const int RefThreadPerBlock = 256;
     }   \
   } while(0)                \
 
-#define checkSpMMErrorCG(a) \
+#define checkSpMMsuffix \
   do {                    \
-    out_feature.reset();  \
-    a<Index,DType,GROUP_SIZE,RefThreadPerBlock,64>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());                    \
     out_feature.download();\
     bool pass = util::check_result(H.nrow, feature_size, out_feature.h_array.get(), out_ref.h_array.get());\
     if (pass) {             \
@@ -59,6 +68,7 @@ const int RefThreadPerBlock = 256;
     } else {                \
       std::cout<<"Not Passed!"<<std::endl;\
     }   \
+    out_feature.reset();    \
   } while(0)                \
   
 #define SHFL_DOWN_REDUCE(v) \

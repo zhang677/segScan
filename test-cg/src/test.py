@@ -42,7 +42,7 @@ elif mode == '1':
     profs = f.readline()
     for input_matrix in input_matrices:
         input_matrix_dir = os.path.join(matrices_dir, input_matrix, input_matrix+'.mtx')
-        cmd = [ncu, '-o', '../profile/'+input_matrix+'-prof','-f','--metrics',profs,'--target-processes', 'all','./test',input_matrix_dir, feature_size, mode]
+        cmd = [ncu, '-o', '../profile/'+input_matrix+'-prof','-f','--metrics',profs,'--target-processes', 'all','./test',input_matrix_dir, feature_size, mode] # '--replay-mode','application',
         execute_cmd(cmd)
         cmd = ['sudo','chmod','777','../profile/'+input_matrix+'-prof.ncu-rep']
         execute_cmd(cmd)

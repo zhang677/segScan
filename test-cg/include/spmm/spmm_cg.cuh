@@ -27,7 +27,7 @@ __global__ void csrspmm_parreduce_nnzbalance_cg_kernel(
     int stride = gridDim.x * (blockDim.y * tile_size);
     
     // get the dense column offset
-    int col_offset = blockIdx.y * tile_size + (threadIdx.x / tile_size) * CoarsenFactor;
+    int col_offset = (blockIdx.y * tile_size) + (threadIdx.x / tile_size) * CoarsenFactor;
     const float *B_panel = B + col_offset;
     float *C_panel = C + col_offset;
     int ldB = N;
@@ -175,20 +175,21 @@ __global__ void csrspmm_parreduce_nnzbalance_cg_kernel(
   }
   return;
     }
-template <typename Index, typename DType, int group_size, int thread_per_block, int tile_size>
+template <typename Index, typename DType, int group_factor, int thread_per_block, int tile_factor>
 void csrspmm_parreduce_nnzbalance_cg(SpMatCsrDescr_t<Index, DType>& spmatA, 
     const int N, const DType *B, DType *C) {
 
     // factor of thread coarsening
     int coarsen_factor = (N % 4 == 0) ? 4 : (N % 2 == 0) ? 2 : 1;
     // number of parallel warps along M-dimension
-    int Nnzdim_worker = spmatA.nrow * 2; // CEIL(spmatA.nnz, segreduce_size_per_warp);
+    int Nnzdim_worker = spmatA.nrow * 2;
     // partition large-N and map to blockdim.y to help cache performance
-    int Ndim_threadblock = CEIL(N, tile_size);
-    int Ndim_warp_per_tb = min(N, tile_size) / coarsen_factor;
+    int tile_size = 1<<tile_factor;
+    int Ndim_threadblock = CEIL(N, tile_size); // 1
+    int Ndim_warp_per_tb = min(N, tile_size) / coarsen_factor; // 32
 
-    int ref_warp_per_tb = thread_per_block / tile_size;
-    int Nnzdim_warp_per_tb = CEIL(ref_warp_per_tb, Ndim_warp_per_tb);
+    int ref_warp_per_tb = thread_per_block / tile_size; // 512/128 = 4 
+    int Nnzdim_warp_per_tb = CEIL(ref_warp_per_tb, Ndim_warp_per_tb); // 1
 
     // total number of warps
     int gridDimX = CEIL(Nnzdim_worker, Nnzdim_warp_per_tb);
@@ -197,18 +198,24 @@ void csrspmm_parreduce_nnzbalance_cg(SpMatCsrDescr_t<Index, DType>& spmatA,
     dim3 blockDim(Ndim_warp_per_tb * tile_size, Nnzdim_warp_per_tb, 1);
 
     if (coarsen_factor == 4) {
-    csrspmm_parreduce_nnzbalance_cg_kernel<float4, group_size, tile_size><<<gridDim, blockDim>>>(
+    csrspmm_parreduce_nnzbalance_cg_kernel<float4, 1<<group_factor, 1<<tile_factor ><<<gridDim, blockDim>>>(
     spmatA.nrow, N, spmatA.ncol, spmatA.nnz, spmatA.sp_csrptr.d_array.get(), spmatA.sp_csrind.d_array.get(),
     spmatA.sp_data.d_array.get(), B, C);
     } else if (coarsen_factor == 2) {
-    csrspmm_parreduce_nnzbalance_cg_kernel<float2, group_size, tile_size><<<gridDim, blockDim>>>(
+    csrspmm_parreduce_nnzbalance_cg_kernel<float2, 1<<group_factor, 1<<tile_factor ><<<gridDim, blockDim>>>(
     spmatA.nrow, N, spmatA.ncol, spmatA.nnz, spmatA.sp_csrptr.d_array.get(), spmatA.sp_csrind.d_array.get(),
     spmatA.sp_data.d_array.get(), B, C);
     } else {
-    csrspmm_parreduce_nnzbalance_cg_kernel<float, group_size, tile_size><<<gridDim, blockDim>>>(
+    csrspmm_parreduce_nnzbalance_cg_kernel<float, 1<<group_factor, 1<<tile_factor ><<<gridDim, blockDim>>>(
     spmatA.nrow, N, spmatA.ncol, spmatA.nnz, spmatA.sp_csrptr.d_array.get(), spmatA.sp_csrind.d_array.get(),
     spmatA.sp_data.d_array.get(), B, C);
     }
+    /*
+    cudaDeviceSynchronize();
+    std::cout<<"("<<gridDim.x<<","<<gridDim.y<<","<<gridDim.z<<")"<<std::endl;
+    std::cout<<"("<<blockDim.x<<","<<blockDim.y<<","<<blockDim.z<<")"<<std::endl;  
+    gpuErrchk(cudaGetLastError());
+    */
 }
 
 #endif
