@@ -1,1 +1,4 @@
 test-cg/data/
+test-cg/src/objs
+test-cg/src/test
+test-cg/profile/

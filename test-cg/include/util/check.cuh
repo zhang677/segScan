@@ -11,6 +11,7 @@
 typedef int Index;
 typedef float DType;
 const int RefThreadPerBlock = 256;
+#define FULLMASK 0xffffffff
 
 #define CEIL(x, y) (((x) + (y)-1) / (y))
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
@@ -34,6 +35,19 @@ const int RefThreadPerBlock = 256;
     }                                                                          \
   } while (0)
 
+#define checkSpMMError(a) \
+  do {                    \
+    out_feature.reset();  \
+    a<Index,DType>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());                    \
+    out_feature.download();\
+    bool pass = util::check_result(H.nrow, feature_size, out_feature.h_array.get(), out_ref.h_array.get());\
+    if (pass) {             \
+      std::cout<<"Passed!"<<std::endl;\
+    } else {                \
+      std::cout<<"Not Passed!"<<std::endl;\
+    }   \
+  } while(0)                \
+  
 #define SHFL_DOWN_REDUCE(v) \
 v += __shfl_down_sync(FULLMASK, v, 16);\
 v += __shfl_down_sync(FULLMASK, v, 8);\
@@ -47,6 +61,31 @@ tmpv = __shfl_down_sync(FULLMASK, v, 2); tmps = __shfl_down_sync(FULLMASK, segid
 tmpv = __shfl_down_sync(FULLMASK, v, 4); tmps = __shfl_down_sync(FULLMASK, segid, 4); if (tmps == segid && lane_id < 28) v += tmpv;\
 tmpv = __shfl_down_sync(FULLMASK, v, 8); tmps = __shfl_down_sync(FULLMASK, segid, 8); if (tmps == segid && lane_id < 24) v += tmpv;\
 tmpv = __shfl_down_sync(FULLMASK, v, 16); tmps = __shfl_down_sync(FULLMASK, segid, 16); if (tmps == segid && lane_id < 16) v += tmpv;
+
+template <typename index_t>
+__device__ __forceinline__ index_t
+binary_search_segment_number(const index_t *seg_offsets, const index_t n_seg,
+                             const index_t n_elem, const index_t elem_id) {
+  index_t lo = 1, hi = n_seg, mid;
+  while (lo < hi) {
+    mid = (lo + hi) >> 1;
+    if (seg_offsets[mid] <= elem_id) {
+      lo = mid + 1;
+    } else {
+      hi = mid;
+    }
+  }
+  return (hi - 1);
+}
+
+template <typename T>
+__device__ __forceinline__ T __guard_load_default_one(const T *base,
+                                                      int offset) {
+  if (base != nullptr)
+    return base[offset];
+  else
+    return static_cast<T>(1);
+}
 
 namespace util {
 

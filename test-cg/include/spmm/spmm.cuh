@@ -1,5 +1,14 @@
+#include "../dataloader/dataloader.hpp"
 #include "../util/check.cuh"
+#include "../util/ramArray.cuh"
+#include <cuda.h>
+#include <cusparse.h>
+#include <iostream>
 
+enum spmm_kernel_met {
+  cusparse,
+  eb_pr,
+};
 
 template <typename access_t>
 __global__ void csrspmm_parreduce_nnzbalance_kernel(
@@ -151,8 +160,9 @@ Ndim_Residue:
   return;
 }
 
-void csrspmm_parreduce_nnzbalance(const SpMatCsrDescr_t spmatA, const float *B,
-  const int N, float *C) {
+template <typename Index, typename DType>
+void csrspmm_parreduce_nnzbalance(SpMatCsrDescr_t<Index, DType>& spmatA, 
+  const int N, const DType *B, DType *C) {
 
   // factor of thread coarsening
   int coarsen_factor = (N % 4 == 0) ? 4 : (N % 2 == 0) ? 2 : 1;
@@ -174,22 +184,22 @@ void csrspmm_parreduce_nnzbalance(const SpMatCsrDescr_t spmatA, const float *B,
 
   if (coarsen_factor == 4) {
   csrspmm_parreduce_nnzbalance_kernel<float4><<<gridDim, blockDim>>>(
-  spmatA.nrow, N, spmatA.ncol, spmatA.nnz, spmatA.indptr, spmatA.indices,
-  spmatA.data, B, C);
+  spmatA.nrow, N, spmatA.ncol, spmatA.nnz, spmatA.sp_csrptr.d_array.get(), spmatA.sp_csrind.d_array.get(),
+  spmatA.sp_data.d_array.get(), B, C);
   } else if (coarsen_factor == 2) {
   csrspmm_parreduce_nnzbalance_kernel<float2><<<gridDim, blockDim>>>(
-  spmatA.nrow, N, spmatA.ncol, spmatA.nnz, spmatA.indptr, spmatA.indices,
-  spmatA.data, B, C);
+  spmatA.nrow, N, spmatA.ncol, spmatA.nnz, spmatA.sp_csrptr.d_array.get(), spmatA.sp_csrind.d_array.get(),
+  spmatA.sp_data.d_array.get(), B, C);
   } else {
   csrspmm_parreduce_nnzbalance_kernel<float><<<gridDim, blockDim>>>(
-  spmatA.nrow, N, spmatA.ncol, spmatA.nnz, spmatA.indptr, spmatA.indices,
-  spmatA.data, B, C);
+  spmatA.nrow, N, spmatA.ncol, spmatA.nnz, spmatA.sp_csrptr.d_array.get(), spmatA.sp_csrind.d_array.get(),
+  spmatA.sp_data.d_array.get(), B, C);
   }
 }
 
 template <typename Index, typename DType>
-float csrspmm_cusparse_test(int iter, SpMatCsrDescr_t<Index, DType> &spmatA,
-                            const Index feature_size, DType *in_feature,
+void csrspmm_cusparse(SpMatCsrDescr_t<Index, DType> &spmatA,
+                            const int feature_size, DType *in_feature,
                             DType *out_feature) {
   //
   // Run Cusparse-SpMM and check result
@@ -232,15 +242,32 @@ float csrspmm_cusparse_test(int iter, SpMatCsrDescr_t<Index, DType> &spmatA,
   checkCudaError(cudaMalloc(&workspace, workspace_size));
 
   // run SpMM
-  util::gpuTimer atimer;
-  atimer.start();
-  for (int i = 0; i < iter; i++)
-    checkCuSparseError(cusparseSpMM(handle,
-                                    CUSPARSE_OPERATION_NON_TRANSPOSE, // opA
-                                    CUSPARSE_OPERATION_NON_TRANSPOSE, // opB
-                                    &alpha, csrDescr, dnMatInputDescr, &beta,
-                                    dnMatOutputDescr, CUDA_R_32F,
-                                    CUSPARSE_SPMM_ALG_DEFAULT, workspace));
-  atimer.end();
-  return atimer.elapsed();
+  checkCuSparseError(cusparseSpMM(handle,
+                                  CUSPARSE_OPERATION_NON_TRANSPOSE, // opA
+                                  CUSPARSE_OPERATION_NON_TRANSPOSE, // opB
+                                  &alpha, csrDescr, dnMatInputDescr, &beta,
+                                  dnMatOutputDescr, CUDA_R_32F,
+                                  CUSPARSE_SPMM_ALG_DEFAULT, workspace));
+}
+
+template <class Index, class DType, spmm_kernel_met km>
+void SpMM_check(SpMatCsrDescr_t<Index, DType>& H, const int feature_size,
+util::RamArray<DType> &in_feature, util::RamArray<DType> &out_feature, util::RamArray<DType> &out_ref) {
+  out_feature.reset();
+  if (km == spmm_kernel_met::cusparse) {
+    std::cout<<"cusparse: ";
+    csrspmm_cusparse<Index, DType>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+  } else if (km == spmm_kernel_met::eb_pr) {
+    std::cout<<"eb_pr: ";
+    csrspmm_parreduce_nnzbalance<Index, DType>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+  } else {
+    std::cout<<"Not implemented yet!"<<std::endl;
+  }
+  out_feature.download();
+  bool pass = util::check_result(H.nrow, feature_size, out_feature.h_array.get(), out_ref.h_array.get());
+  if (pass) {
+    std::cout<<"Passed!"<<std::endl;
+  } else {
+    std::cout<<"Not Passed!"<<std::endl;
+}
 }
