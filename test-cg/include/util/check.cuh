@@ -51,7 +51,7 @@ const int RefThreadPerBlock = 256;
 #define checkSpMMErrorCG(a) \
   do {                    \
     out_feature.reset();  \
-    a<Index,DType,GROUP_SIZE>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());                    \
+    a<Index,DType,GROUP_SIZE,RefThreadPerBlock,64>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());                    \
     out_feature.download();\
     bool pass = util::check_result(H.nrow, feature_size, out_feature.h_array.get(), out_ref.h_array.get());\
     if (pass) {             \

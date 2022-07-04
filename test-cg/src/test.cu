@@ -54,7 +54,6 @@ int main(int argc, const char **argv) {
             H.nrow, feature_size, H.sp_csrptr.h_array.get(),
             H.sp_csrind.h_array.get(), H.sp_data.h_array.get(),
             in_feature.h_array.get(), out_ref.h_array.get());
-
         checkSpMMErrorCG(csrspmm_parreduce_nnzbalance_cg);
     } else if (mode == Mode::test) {
         csrspmm_parreduce_nnzbalance<Index,DType>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());

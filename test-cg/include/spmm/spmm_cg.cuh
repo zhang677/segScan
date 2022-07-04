@@ -11,7 +11,7 @@
 #include <iostream>
 using namespace cooperative_groups;
 
-template <typename access_t, int group_size>
+template <typename access_t, int group_size, int tile_size>
 __global__ void csrspmm_parreduce_nnzbalance_cg_kernel(
     const int M, const int N, const int K, const int nnz_,
     const int csr_indptr[], const int csr_indices[], const float csr_data[],
@@ -21,13 +21,13 @@ __global__ void csrspmm_parreduce_nnzbalance_cg_kernel(
     if (nnz < 0)
         nnz = csr_indptr[M];
     
-    int lane_id = (threadIdx.x & (group_size - 1));
+    int lane_id = (threadIdx.x & (tile_size - 1));
     int Nnzdim_warp_id = blockIdx.x * blockDim.y + threadIdx.y;
-    int nz_start = Nnzdim_warp_id * group_size;
-    int stride = gridDim.x * (blockDim.y * group_size);
+    int nz_start = Nnzdim_warp_id * tile_size;
+    int stride = gridDim.x * (blockDim.y * tile_size);
     
     // get the dense column offset
-    int col_offset = blockIdx.y * group_size + (threadIdx.x / group_size) * CoarsenFactor;
+    int col_offset = blockIdx.y * tile_size + (threadIdx.x / tile_size) * CoarsenFactor;
     const float *B_panel = B + col_offset;
     float *C_panel = C + col_offset;
     int ldB = N;
@@ -72,11 +72,11 @@ __global__ void csrspmm_parreduce_nnzbalance_cg_kernel(
     // if all non-zeros in this warp belong to the same row, use a simple reduction
     #pragma unroll
         for (int i = 0; i < CoarsenFactor; i++) {
-            for (int i = g.size()>>1 ; i>0; i = i >> 1) {
-                c[i] += g.shfl_down(v, i);
+            for (int k = group.size()>>1 ; k>0; k = k >> 1) {
+                c[i] += group.shfl_down(c[i], k);
             }
         }
-        if (lane_id == 0) {
+        if (group.thread_rank() == 0) {
     #pragma unroll
             for (int i = 0; i < CoarsenFactor; i++) {
             atomicAdd(C_panel + row * ldC + i, c[i]);
@@ -86,7 +86,7 @@ __global__ void csrspmm_parreduce_nnzbalance_cg_kernel(
         // if non-zeros belong to different rows, use a parallel-scan primitive
         // thread that holds the start of each segment are responsible for writing
         // results
-        bool is_seg_start = ((group.shfl_up(row,1) != row)|| (lane_id == 0));
+        bool is_seg_start = ((group.shfl_up(row,1) != row)|| (group.thread_rank() == 0));
         float tmpv;
         int tmpr;
     #pragma unroll
@@ -137,11 +137,11 @@ __global__ void csrspmm_parreduce_nnzbalance_cg_kernel(
     if (row_intv == 0) {
 #pragma unroll
       for (int i = 0; i < CoarsenFactor; i++) {
-        for (int i = group.size()>>1 ; i>0; i = i >> 1) {
-            c[i] += group.shfl_down(v, i);
+        for (int k = group.size()>>1 ; k>0; k = k >> 1) {
+            c[i] += group.shfl_down(c[i], k);
         }
       }
-      if (lane_id == 0) {
+      if (group.thread_rank() == 0) {
 #pragma unroll
         for (int i = 0; i < CoarsenFactor; i++) {
           if (i < valid_lane_num) {
@@ -150,7 +150,7 @@ __global__ void csrspmm_parreduce_nnzbalance_cg_kernel(
         }
       }
     } else {
-      bool is_seg_start = ((group.shfl_up(row,1) != row)|| (lane_id == 0));
+      bool is_seg_start = ((group.shfl_up(row,1) != row)|| (group.thread_rank() == 0));
       float tmpv;
       int tmpr;
 #pragma unroll
@@ -175,7 +175,7 @@ __global__ void csrspmm_parreduce_nnzbalance_cg_kernel(
   }
   return;
     }
-template <typename Index, typename DType, int group_size>
+template <typename Index, typename DType, int group_size, int thread_per_block, int tile_size>
 void csrspmm_parreduce_nnzbalance_cg(SpMatCsrDescr_t<Index, DType>& spmatA, 
     const int N, const DType *B, DType *C) {
 
@@ -184,28 +184,28 @@ void csrspmm_parreduce_nnzbalance_cg(SpMatCsrDescr_t<Index, DType>& spmatA,
     // number of parallel warps along M-dimension
     int Nnzdim_worker = spmatA.nrow * 2; // CEIL(spmatA.nnz, segreduce_size_per_warp);
     // partition large-N and map to blockdim.y to help cache performance
-    int Ndim_threadblock = CEIL(N, group_size);
-    int Ndim_warp_per_tb = min(N, group_size) / coarsen_factor;
+    int Ndim_threadblock = CEIL(N, tile_size);
+    int Ndim_warp_per_tb = min(N, tile_size) / coarsen_factor;
 
-    int ref_warp_per_tb = RefThreadPerBlock / group_size;
+    int ref_warp_per_tb = thread_per_block / tile_size;
     int Nnzdim_warp_per_tb = CEIL(ref_warp_per_tb, Ndim_warp_per_tb);
 
     // total number of warps
     int gridDimX = CEIL(Nnzdim_worker, Nnzdim_warp_per_tb);
     int gridDimY = Ndim_threadblock;
     dim3 gridDim(gridDimX, gridDimY, 1);
-    dim3 blockDim(Ndim_warp_per_tb * group_size, Nnzdim_warp_per_tb, 1);
+    dim3 blockDim(Ndim_warp_per_tb * tile_size, Nnzdim_warp_per_tb, 1);
 
     if (coarsen_factor == 4) {
-    csrspmm_parreduce_nnzbalance_cg_kernel<float4, group_size><<<gridDim, blockDim>>>(
+    csrspmm_parreduce_nnzbalance_cg_kernel<float4, group_size, tile_size><<<gridDim, blockDim>>>(
     spmatA.nrow, N, spmatA.ncol, spmatA.nnz, spmatA.sp_csrptr.d_array.get(), spmatA.sp_csrind.d_array.get(),
     spmatA.sp_data.d_array.get(), B, C);
     } else if (coarsen_factor == 2) {
-    csrspmm_parreduce_nnzbalance_cg_kernel<float2, group_size><<<gridDim, blockDim>>>(
+    csrspmm_parreduce_nnzbalance_cg_kernel<float2, group_size, tile_size><<<gridDim, blockDim>>>(
     spmatA.nrow, N, spmatA.ncol, spmatA.nnz, spmatA.sp_csrptr.d_array.get(), spmatA.sp_csrind.d_array.get(),
     spmatA.sp_data.d_array.get(), B, C);
     } else {
-    csrspmm_parreduce_nnzbalance_cg_kernel<float, group_size><<<gridDim, blockDim>>>(
+    csrspmm_parreduce_nnzbalance_cg_kernel<float, group_size, tile_size><<<gridDim, blockDim>>>(
     spmatA.nrow, N, spmatA.ncol, spmatA.nnz, spmatA.sp_csrptr.d_array.get(), spmatA.sp_csrind.d_array.get(),
     spmatA.sp_data.d_array.get(), B, C);
     }
