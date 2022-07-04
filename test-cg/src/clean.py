@@ -20,12 +20,13 @@ for input_matrix in input_matrices:
     prof_name = '../profile/'+input_matrix+'-prof.ncu-rep'
     my_context = ncu_report.load_report(prof_name)
     my_range = my_context.range_by_idx(0)
-    my_action = my_range.action_by_idx(0)
-    kernel_name = my_action.name()
-    f.write(input_matrix+','+kernel_name)
-    for i in all_metric:
-        f.write(','+str(my_action.metric_by_name(i).as_double()))
-    f.write('\n')
+    for j in range(my_range.num_actions()):
+        my_action = my_range.action_by_idx(j)
+        kernel_name = my_action.name()
+        f.write(input_matrix+','+kernel_name)
+        for i in all_metric:
+            f.write(','+str(my_action.metric_by_name(i).as_double()))
+        f.write('\n')
 
 f.close()
     

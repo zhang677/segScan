@@ -12,7 +12,7 @@ typedef int Index;
 typedef float DType;
 const int RefThreadPerBlock = 256;
 #define FULLMASK 0xffffffff
-
+#define GROUP_SIZE 16
 #define CEIL(x, y) (((x) + (y)-1) / (y))
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
@@ -39,6 +39,19 @@ const int RefThreadPerBlock = 256;
   do {                    \
     out_feature.reset();  \
     a<Index,DType>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());                    \
+    out_feature.download();\
+    bool pass = util::check_result(H.nrow, feature_size, out_feature.h_array.get(), out_ref.h_array.get());\
+    if (pass) {             \
+      std::cout<<"Passed!"<<std::endl;\
+    } else {                \
+      std::cout<<"Not Passed!"<<std::endl;\
+    }   \
+  } while(0)                \
+
+#define checkSpMMErrorCG(a) \
+  do {                    \
+    out_feature.reset();  \
+    a<Index,DType,GROUP_SIZE>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());                    \
     out_feature.download();\
     bool pass = util::check_result(H.nrow, feature_size, out_feature.h_array.get(), out_ref.h_array.get());\
     if (pass) {             \
@@ -144,4 +157,5 @@ __device__ __forceinline__ T __guard_load_default_one(const T *base,
 }
 
 } // namespace util
+
 #endif // CHECK_

@@ -1,5 +1,5 @@
-#ifndef CHECK_H
-#define CHECK_H
+#ifndef GPUTIMER
+#define GPUTIMER
 
 #include "check.cuh"
 

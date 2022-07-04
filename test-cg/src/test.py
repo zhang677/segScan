@@ -46,7 +46,6 @@ elif mode == '1':
         execute_cmd(cmd)
         cmd = ['sudo','chmod','777','../profile/'+input_matrix+'-prof.ncu-rep']
         execute_cmd(cmd)
-        #subprocess.run(cmd)
 else:
     raise NotImplementedError
 # Check

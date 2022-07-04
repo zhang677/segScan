@@ -1,4 +1,5 @@
 #include "../include/spmm/spmm.cuh"
+#include "../include/spmm/spmm_cg.cuh"
 #include "../include/dataloader/dataloader.hpp"
 #include "../include/util/ramArray.cuh"
 #include "../include/util/check.cuh"
@@ -9,6 +10,8 @@
 #include <iostream>
 #include <stdio.h>  // printf
 #include <stdlib.h> // EXIT_FAILURE
+
+
 // None-template, No timer version
 enum Mode {
     check,
@@ -52,8 +55,7 @@ int main(int argc, const char **argv) {
             H.sp_csrind.h_array.get(), H.sp_data.h_array.get(),
             in_feature.h_array.get(), out_ref.h_array.get());
 
-        checkSpMMError(csrspmm_parreduce_nnzbalance);
-        checkSpMMError(csrspmm_cusparse);
+        checkSpMMErrorCG(csrspmm_parreduce_nnzbalance_cg);
     } else if (mode == Mode::test) {
         csrspmm_parreduce_nnzbalance<Index,DType>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
     }

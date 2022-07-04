@@ -1,3 +1,6 @@
+#ifndef SPMM
+#define SPMM
+
 #include "../dataloader/dataloader.hpp"
 #include "../util/check.cuh"
 #include "../util/ramArray.cuh"
@@ -8,6 +11,7 @@
 enum spmm_kernel_met {
   cusparse,
   eb_pr,
+  eb_pr_cg,
 };
 
 template <typename access_t>
@@ -271,3 +275,5 @@ util::RamArray<DType> &in_feature, util::RamArray<DType> &out_feature, util::Ram
     std::cout<<"Not Passed!"<<std::endl;
 }
 }
+
+#endif
