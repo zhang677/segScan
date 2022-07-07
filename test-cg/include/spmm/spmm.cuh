@@ -244,7 +244,8 @@ void csrspmm_cusparse(SpMatCsrDescr_t<Index, DType> &spmatA,
 
   void *workspace = NULL;
   checkCudaError(cudaMalloc(&workspace, workspace_size));
-
+  cudaDeviceSynchronize();
+  gpuErrchk(cudaGetLastError());
   // run SpMM
   checkCuSparseError(cusparseSpMM(handle,
                                   CUSPARSE_OPERATION_NON_TRANSPOSE, // opA
@@ -252,6 +253,8 @@ void csrspmm_cusparse(SpMatCsrDescr_t<Index, DType> &spmatA,
                                   &alpha, csrDescr, dnMatInputDescr, &beta,
                                   dnMatOutputDescr, CUDA_R_32F,
                                   CUSPARSE_SPMM_ALG_DEFAULT, workspace));
+  cudaDeviceSynchronize();
+  gpuErrchk(cudaGetLastError());
 }
 
 template <class Index, class DType, spmm_kernel_met km>

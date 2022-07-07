@@ -15,7 +15,7 @@ template <typename DType> struct deleter {
 };
 
 template <typename DType> struct cudaDeleter {
-  void operator()(DType const *ptr) { cudaFree((void *)ptr); }
+  void operator()(DType const *ptr) { checkCudaError(cudaFree((void *)ptr)); }
 };
 
 template <class DType> class RamArray {
@@ -85,7 +85,7 @@ template <typename DType> void RamArray<DType>::fill_default_one() {
 
 template <typename DType> void RamArray<DType>::reset() {
   fill_zero_h();
-  cudaMemset(d_array.get(), 0, size);
+  checkCudaError(cudaMemset(d_array.get(), 0, size));
 }
 
 template <typename DType> void RamArray<DType>::upload() {

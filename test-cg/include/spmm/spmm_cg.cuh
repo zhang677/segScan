@@ -175,14 +175,15 @@ __global__ void csrspmm_parreduce_nnzbalance_cg_kernel(
   }
   return;
     }
-template <typename Index, typename DType, int group_factor, int thread_per_block, int tile_factor>
+template <typename Index, typename DType, int group_factor, int thread_per_block, int tile_factor, int block_numer,int block_denom>
 void csrspmm_parreduce_nnzbalance_cg(SpMatCsrDescr_t<Index, DType>& spmatA, 
     const int N, const DType *B, DType *C) {
 
     // factor of thread coarsening
     int coarsen_factor = (N % 4 == 0) ? 4 : (N % 2 == 0) ? 2 : 1;
     // number of parallel warps along M-dimension
-    int Nnzdim_worker = spmatA.nrow * 2;
+    float block_factor = (float)block_numer / (float)block_denom;
+    int Nnzdim_worker = (float)spmatA.nrow * block_factor;
     // partition large-N and map to blockdim.y to help cache performance
     int tile_size = 1<<tile_factor;
     int Ndim_threadblock = CEIL(N, tile_size); // 1

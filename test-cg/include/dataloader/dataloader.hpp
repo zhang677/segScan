@@ -187,7 +187,7 @@ SpMatCsrDescr_t<Index, DType> SingleDataLoader(const char *filename) {
   int H_nrow, H_ncol, H_nnz;
   std::vector<Index> H_csrptr, H_csrind, H_coorow;
   read_mtx_file(filename, H_nrow, H_ncol, H_nnz, H_csrptr, H_csrind, H_coorow);
-  SpMatCsrDescr_t<Index, DType> H(H_nrow, H_csrptr, H_csrind);
+  SpMatCsrDescr_t<Index, DType> H(H_ncol, H_csrptr, H_csrind);
   return H;
 }
 
