@@ -12,7 +12,7 @@ make
 # Observation
 1. Cooperative group doesn't necessarily improve the performance (7_6_1_36.csv, 7_7_3_34.csv)
 | Dataset     | Macro | Cooperative Group |
-| ----------- | ----------- | ----------- |
+| :---:       |    :----:   |    :---: |
 | 192bit      | 25.9552 ms  | 28.8416 ms  |
 | 12month1    | 2588.6400 ms| 2386.9184 ms|
 
