@@ -1,5 +1,7 @@
 import ncu_report
 import datetime
+import sys
+hardware = sys.argv[1]
 matrix_names = 'part_names.txt'
 f = open(matrix_names,'r')
 input_matrices = f.readline().split(',')
@@ -10,7 +12,7 @@ all_metric = f.readline().split(',')
 f.close()
 now = datetime.datetime.now()
 wrongf = open('wrong_names.txt','w')
-f = open('../tables/'+str(now.month)+'_'+str(now.day)+'_'+str(now.hour)+'_'+str(now.minute)+'.csv','w')
+f = open('../tables/'+hardware+'/'+now.strftime("%m%d-%H%M%S")+'-'+hardware+'.csv','w')
 launch_metric = ['launch__block_dim_x','launch__block_dim_y','launch__grid_dim_x','launch__grid_dim_y','launch__block_size', 'launch__grid_size']
 nick_names = ['L1_Red','L1_Global','L1_Hit','L2_Load','L2_Red','L2_Hit','DRAM_Read','DRAM_Write','Waves_per_SM','ActiveWarps_per_SM','Time','SOL_Mem','SOL_SM','BlockDimX','BlockDimY','GridDimX','GridDimY','BlockSize','GridSize']
 headline = ''
@@ -22,8 +24,7 @@ headline += '\n'
 f.write(headline)
 Wrong = False
 for input_matrix in input_matrices:
-    print(input_matrix)
-    prof_name = '../profile/'+input_matrix+'-prof.ncu-rep'
+    prof_name = '../profile/'+hardware+'/'+input_matrix+'-'+hardware+'.ncu-rep'
     my_context = ncu_report.load_report(prof_name)
     my_range = my_context.range_by_idx(0)
     for j in range(my_range.num_actions()):

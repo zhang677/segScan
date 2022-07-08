@@ -176,28 +176,64 @@ int main(int argc, const char **argv) {
          
         csrspmm_parreduce_nnzbalance_cg<Index,DType,2,128,5,1,1>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
         */
-        /*
+        
         // 256
+        csrspmm_parreduce_nnzbalance_cg<Index,DType,5,256,5,1,32>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        csrspmm_parreduce_nnzbalance_cg<Index,DType,5,256,5,1,16>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        csrspmm_parreduce_nnzbalance_cg<Index,DType,5,256,5,1,8>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        csrspmm_parreduce_nnzbalance_cg<Index,DType,5,256,5,1,4>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        csrspmm_parreduce_nnzbalance_cg<Index,DType,5,256,5,1,2>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
         csrspmm_parreduce_nnzbalance_cg<Index,DType,5,256,5,1,1>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
 
+        csrspmm_parreduce_nnzbalance_cg<Index,DType,4,256,4,1,32>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        csrspmm_parreduce_nnzbalance_cg<Index,DType,4,256,4,1,16>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        csrspmm_parreduce_nnzbalance_cg<Index,DType,4,256,4,1,8>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        csrspmm_parreduce_nnzbalance_cg<Index,DType,4,256,4,1,4>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        csrspmm_parreduce_nnzbalance_cg<Index,DType,4,256,4,1,2>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
         csrspmm_parreduce_nnzbalance_cg<Index,DType,4,256,4,1,1>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
          
+        csrspmm_parreduce_nnzbalance_cg<Index,DType,4,256,5,1,32>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        csrspmm_parreduce_nnzbalance_cg<Index,DType,4,256,5,1,16>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        csrspmm_parreduce_nnzbalance_cg<Index,DType,4,256,5,1,8>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        csrspmm_parreduce_nnzbalance_cg<Index,DType,4,256,5,1,4>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        csrspmm_parreduce_nnzbalance_cg<Index,DType,4,256,5,1,2>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
         csrspmm_parreduce_nnzbalance_cg<Index,DType,4,256,5,1,1>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());         
 
+        csrspmm_parreduce_nnzbalance_cg<Index,DType,3,256,3,1,32>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        csrspmm_parreduce_nnzbalance_cg<Index,DType,3,256,3,1,16>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        csrspmm_parreduce_nnzbalance_cg<Index,DType,3,256,3,1,8>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        csrspmm_parreduce_nnzbalance_cg<Index,DType,3,256,3,1,4>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        csrspmm_parreduce_nnzbalance_cg<Index,DType,3,256,3,1,2>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
         csrspmm_parreduce_nnzbalance_cg<Index,DType,3,256,3,1,1>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
          
+        csrspmm_parreduce_nnzbalance_cg<Index,DType,3,256,4,1,32>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        csrspmm_parreduce_nnzbalance_cg<Index,DType,3,256,4,1,16>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        csrspmm_parreduce_nnzbalance_cg<Index,DType,3,256,4,1,8>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        csrspmm_parreduce_nnzbalance_cg<Index,DType,3,256,4,1,4>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        csrspmm_parreduce_nnzbalance_cg<Index,DType,3,256,4,1,2>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
         csrspmm_parreduce_nnzbalance_cg<Index,DType,3,256,4,1,1>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
          
-        csrspmm_parreduce_nnzbalance_cg<Index,DType,3,256,5,1,1>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());         
-
+        csrspmm_parreduce_nnzbalance_cg<Index,DType,2,256,2,1,32>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        csrspmm_parreduce_nnzbalance_cg<Index,DType,2,256,2,1,16>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        csrspmm_parreduce_nnzbalance_cg<Index,DType,2,256,2,1,8>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        csrspmm_parreduce_nnzbalance_cg<Index,DType,2,256,2,1,4>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        csrspmm_parreduce_nnzbalance_cg<Index,DType,2,256,2,1,2>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
         csrspmm_parreduce_nnzbalance_cg<Index,DType,2,256,2,1,1>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
          
-        csrspmm_parreduce_nnzbalance_cg<Index,DType,2,256,3,1,1>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
-         
-        csrspmm_parreduce_nnzbalance_cg<Index,DType,2,256,4,1,1>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
-         
-        csrspmm_parreduce_nnzbalance_cg<Index,DType,2,256,5,1,1>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());         
-
+        csrspmm_parreduce_nnzbalance_cg<Index,DType,2,256,3,1,32>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        csrspmm_parreduce_nnzbalance_cg<Index,DType,2,256,3,1,16>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        csrspmm_parreduce_nnzbalance_cg<Index,DType,2,256,3,1,8>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        csrspmm_parreduce_nnzbalance_cg<Index,DType,2,256,3,1,4>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        csrspmm_parreduce_nnzbalance_cg<Index,DType,2,256,3,1,2>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        csrspmm_parreduce_nnzbalance_cg<Index,DType,2,256,3,1,1>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());         
+        
+        csrspmm_parreduce_nnzbalance_cg<Index,DType,2,256,4,1,32>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        csrspmm_parreduce_nnzbalance_cg<Index,DType,2,256,4,1,16>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        csrspmm_parreduce_nnzbalance_cg<Index,DType,2,256,4,1,8>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        csrspmm_parreduce_nnzbalance_cg<Index,DType,2,256,4,1,4>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        csrspmm_parreduce_nnzbalance_cg<Index,DType,2,256,4,1,2>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        csrspmm_parreduce_nnzbalance_cg<Index,DType,2,256,4,1,1>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());         
+        /*
         // 512
         csrspmm_parreduce_nnzbalance_cg<Index,DType,5,512,5,1,1>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());         
 
