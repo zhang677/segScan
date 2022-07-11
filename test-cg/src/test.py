@@ -13,9 +13,9 @@ def device_num(dev):
     if dev=='3090':
         return '0'
     elif dev=='2080':
-        return '3'
+        return '4'
     elif dev=='V100':
-        return '1'
+        return '2'
     else:
         raise NotImplementedError
 
@@ -37,7 +37,7 @@ elif matrices_dir == '/home/nfs_data/zhanggh/segScan/test-cg/data':
     f.close()
 
 print(input_matrices)
-feature_size = '128'
+feature_size = '64'
 if mode == '0':
     print('==Check Mode==')
     for input_matrix in input_matrices:
@@ -52,7 +52,7 @@ elif mode == '1':
     profs = f.readline()
     for input_matrix in input_matrices:
         input_matrix_dir = os.path.join(matrices_dir, input_matrix, input_matrix+'.mtx')
-        cmd = [ncu, '-o', '../profile/'+hardware+'/'+input_matrix+'-'+hardware,'-f','--metrics',profs,'--target-processes', 'all','./test',input_matrix_dir, feature_size, mode] # '--replay-mode','application',
+        cmd = [ncu, '-o', '../profile/'+hardware+'/'+input_matrix+'-'+hardware+'-'+feature_size,'-f','--metrics',profs,'--target-processes', 'all','./test',input_matrix_dir, feature_size, mode] # '--replay-mode','application',
         execute_cmd(cmd)
         cmd = ['sudo','chmod','777','../profile/'+hardware+'/'+input_matrix+'-'+hardware+'.ncu-rep']
         execute_cmd(cmd)

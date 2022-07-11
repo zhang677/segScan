@@ -7,11 +7,15 @@ subprocess.call(cmd, shell=True)
 cmd = 'cd ../../src'
 subprocess.call(cmd, shell=True)
 """
+feature = '64'
+feature_str = 3
 f = open('part_names.txt','r')
 lines = f.readlines()
 outline = ''
 for i in lines:
-    outline += (i.split('.')[0])[:-5]+','
+    name = i.split('.')[0]
+    if name.split('-')[-1] == feature:
+        outline += name[:-(5+feature_str)]+','
 outline = outline[:-1]
 f.close()
 f = open('part_names.txt','w')

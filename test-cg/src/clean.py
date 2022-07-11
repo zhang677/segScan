@@ -2,10 +2,12 @@ import ncu_report
 import datetime
 import sys
 hardware = sys.argv[1]
+feature_size = sys.argv[2]
 matrix_names = 'part_names.txt'
 f = open(matrix_names,'r')
 input_matrices = f.readline().split(',')
 input_matrices.sort()
+print(len(input_matrices))
 f.close()
 f = open('prof_names.txt','r')
 all_metric = f.readline().split(',')
@@ -24,7 +26,7 @@ headline += '\n'
 f.write(headline)
 Wrong = False
 for input_matrix in input_matrices:
-    prof_name = '../profile/'+hardware+'/'+input_matrix+'-'+hardware+'.ncu-rep'
+    prof_name = '../profile/'+hardware+'/'+input_matrix+'-'+hardware+'-'+feature_size+'.ncu-rep'
     my_context = ncu_report.load_report(prof_name)
     my_range = my_context.range_by_idx(0)
     for j in range(my_range.num_actions()):
