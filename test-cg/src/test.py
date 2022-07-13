@@ -13,7 +13,7 @@ def device_num(dev):
     if dev=='3090':
         return '0'
     elif dev=='2080':
-        return '4'
+        return '3'
     elif dev=='V100':
         return '2'
     else:
@@ -37,7 +37,7 @@ elif matrices_dir == '/home/nfs_data/zhanggh/segScan/test-cg/data':
     f.close()
 
 print(input_matrices)
-feature_size = '64'
+feature_size = '32'
 if mode == '0':
     print('==Check Mode==')
     for input_matrix in input_matrices:

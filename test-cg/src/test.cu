@@ -93,9 +93,9 @@ int main(int argc, const char **argv) {
         checkSpMMsuffix;
     //    csrspmm_parreduce_nnzbalance_cg<Index,DType,2,256,7>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
     //    checkSpMMsuffix;// Wrong
-        
+        */
         // 512
-        
+        /*
         csrspmm_parreduce_nnzbalance_cg<Index,DType,5,512,5,1,1>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
         checkSpMMsuffix;
         csrspmm_parreduce_nnzbalance_cg<Index,DType,5,512,6,1,1>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
