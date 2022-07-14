@@ -44,6 +44,7 @@ Execution time difference is with in 0.5%
 | V100 | 1.524 | 0.439 | 1.469 | 64 |
 
 5. Best result vs. cuSPARSE
+
 | Hardware | mean | std | geomean | N | 
 | :---:    | :----:| :---:| :---:| :---:| 
 | 3090 | 0.371 | 0.151 | 0.342 | 128 |
