@@ -57,11 +57,11 @@ int main(int argc, const char **argv) {
         out_feature.reset();
         csrspmm_seqreduce_rowbalance<Index,DType>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
         checkSpMMsuffix;
-        csrspmm_seqreduce_rowbalance_cg<Index,DType,4,256,5,1,1>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        csrspmm_seqreduce_rowbalance_cg<Index,DType,4,256,5,1,2>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
         checkSpMMsuffix;
-        csrspmm_seqreduce_rowbalance_cg<Index,DType,2,256,5,1,1>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        csrspmm_seqreduce_rowbalance_cg<Index,DType,2,256,5,1,4>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
         checkSpMMsuffix;
-        csrspmm_seqreduce_rowbalance_cg<Index,DType,1,256,5,1,1>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        csrspmm_seqreduce_rowbalance_cg<Index,DType,1,256,5,1,8>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
         checkSpMMsuffix;
         csrspmm_seqreduce_rowbalance_cg<Index,DType,4,256,6,1,1>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
         checkSpMMsuffix;

@@ -607,7 +607,6 @@ csrspmm_seqreduce_rowbalance_cg_kernel(const int M, const int N, const int K,
   int k;
   int v;
   float buffer[CoarsenFactor] = {0};
-  float c[CoarsenFactor] = {0};
 
   if (col_offset >= N)
     return;
@@ -616,6 +615,7 @@ csrspmm_seqreduce_rowbalance_cg_kernel(const int M, const int N, const int K,
 
 
   for (; row < M; row += stride) {
+    float c[CoarsenFactor] = {0};
     int start = __ldg(csr_indptr + row);
     int end = __ldg(csr_indptr + row + 1);
     for (int p = start; p < end; p++) {
@@ -633,6 +633,7 @@ csrspmm_seqreduce_rowbalance_cg_kernel(const int M, const int N, const int K,
 Ndim_Residue:
   int valid_lane_num = N - col_offset;
   for (; row < M; row += stride) {
+    float c[CoarsenFactor] = {0};
     int start = __ldg(csr_indptr + row);
     int end = __ldg(csr_indptr + row + 1);
     for (int p = start; p < end; p++) {
