@@ -4,9 +4,16 @@ Cooperative group on segScan
 Change the directory of datasets, names to your own path
 # Run
 Go to `test-cg/src`.
+To do the checking
 ```
-make clean
-make 
+make clean TARGET=check
+make TARGET=check
+./run.sh
+```
+To do the testing
+```
+make clean TARGET=test
+make TARGET=test
 ./run.sh
 ```
 # Observation
