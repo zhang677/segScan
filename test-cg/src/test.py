@@ -37,12 +37,12 @@ elif matrices_dir == '/home/nfs_data/zhanggh/segScan/test-cg/data':
     f.close()
 
 print(input_matrices)
-feature_size = '32'
+feature_size = '128'
 if mode == '0':
     print('==Check Mode==')
     for input_matrix in input_matrices:
         input_matrix_dir = os.path.join(matrices_dir, input_matrix, input_matrix+'.mtx')
-        cmd = ['./test',input_matrix_dir, feature_size, mode]
+        cmd = ['./check',input_matrix_dir, feature_size, mode]
         print(' '.join(cmd))
         subprocess.run(cmd)
 elif mode == '1':
