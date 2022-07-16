@@ -552,7 +552,7 @@ Ndim_Residue:
   }
 }
 
-template <typename Index, typename DType, int CoarsenFactor, int group_factor, int thread_per_block, int ThreadNz, int block_numer,int block_denom>
+template <typename Index, typename DType, int group_factor, int thread_per_block, int CoarsenFactor, int ThreadNz, int block_numer,int block_denom>
 void csrspmm_rowcaching_nnzbalance_cg(const SpMatCsrDescr_t<Index, DType>& spmatA, 
   const int N, const DType *B, DType *C) {
 int group_size = 1<<group_factor;
@@ -589,5 +589,106 @@ csrspmm_rowcaching_nnzbalance_cg_kernel<1, ThreadNz, 1<<group_factor >
             spmatA.sp_data.d_array.get(), B, C);
   }
 }
+
+template <typename access_t, int tile_size>
+__global__ void
+csrspmm_seqreduce_rowbalance_cg_kernel(const int M, const int N, const int K,
+                                    const int csr_indptr[], const int csr_indices[],
+                                    const float csr_data[], const float B[],
+                                    float C[]) {
+  constexpr int CoarsenFactor = sizeof(access_t) / sizeof(float);
+  int stride = blockDim.x * gridDim.x;
+  int row = threadIdx.x + blockDim.x * blockIdx.x;
+  int col_offset = blockIdx.y * tile_size + threadIdx.y * CoarsenFactor;
+  const float *B_panel = B + col_offset;
+  float *C_panel = C + col_offset;
+  int ldB = N;
+  int ldC = N;
+  int k;
+  int v;
+  float buffer[CoarsenFactor] = {0};
+  float c[CoarsenFactor] = {0};
+
+  if (col_offset >= N)
+    return;
+  if (col_offset + CoarsenFactor >= N)
+    goto Ndim_Residue;
+
+
+  for (; row < M; row += stride) {
+    int start = __ldg(csr_indptr + row);
+    int end = __ldg(csr_indptr + row + 1);
+    for (int p = start; p < end; p++) {
+      k = __ldg(csr_indices + p);
+      v = __guard_load_default_one<float>(csr_data, p);
+      *(access_t *)buffer = *(access_t *)(B_panel + k * ldB);
+      #pragma unroll
+      for (int i = 0; i < CoarsenFactor; i++) {
+        c[i] += buffer[i] * v;
+      }
+    }
+    *(access_t *)(C_panel + row * ldC) = *(access_t *)c;
+  }
+
+Ndim_Residue:
+  int valid_lane_num = N - col_offset;
+  for (; row < M; row += stride) {
+    int start = __ldg(csr_indptr + row);
+    int end = __ldg(csr_indptr + row + 1);
+    for (int p = start; p < end; p++) {
+      k = __ldg(csr_indices + p);
+      v = __guard_load_default_one<float>(csr_data, p);
+      #pragma unroll
+      for (int i = 0; i < CoarsenFactor; i++) {
+        if (i < valid_lane_num) {
+          buffer[i] = B_panel[k * ldB + i];
+        }
+      }
+      #pragma unroll
+      for (int i = 0; i < CoarsenFactor; i++) {
+        if (i < valid_lane_num) {
+          c[i] += buffer[i] * v;
+        }
+      }
+    }
+    #pragma unroll
+    for (int i = 0; i < CoarsenFactor; i++) {
+      if (i < valid_lane_num) {
+        C_panel[row * ldC + i] = c[i];
+      }
+    }
+  }
+}
+
+template <typename Index, typename DType, int coarsen_factor, int thread_per_block, int tile_factor, int block_numer, int block_denom>
+void csrspmm_seqreduce_rowbalance_cg(const SpMatCsrDescr_t<Index, DType>& spmatA, 
+  const int N, const DType *B, DType *C) {
+  
+  float block_factor = (float)block_numer / (float)block_denom;
+  int Mdim_worker = (float)spmatA.nrow * block_factor;
+  int tile_size = 1<<tile_factor; // 32
+  int Ndim_threadblock = CEIL(N, tile_size); // 4
+  int Ndim_thread_per_tb = min(N, tile_size) / coarsen_factor; // 8
+  int Mdim_thread_per_tb = CEIL(thread_per_block, Ndim_thread_per_tb); // 32
+  int Mdim_threadblock = CEIL(Mdim_worker, Mdim_thread_per_tb);
+
+  dim3 gridDim(Mdim_threadblock, Ndim_threadblock, 1); // (x,4,1)
+  dim3 blockDim(Mdim_thread_per_tb,Ndim_thread_per_tb,1); // (32,8,1)
+
+  if (coarsen_factor == 4) {
+    csrspmm_seqreduce_rowbalance_cg_kernel<float4, 1<<tile_factor ><<<gridDim, blockDim>>>(
+    spmatA.nrow, N, spmatA.ncol, spmatA.sp_csrptr.d_array.get(), spmatA.sp_csrind.d_array.get(),
+    spmatA.sp_data.d_array.get(), B, C);
+    } else if (coarsen_factor == 2) {
+    csrspmm_seqreduce_rowbalance_cg_kernel<float2, 1<<tile_factor ><<<gridDim, blockDim>>>(
+    spmatA.nrow, N, spmatA.ncol, spmatA.sp_csrptr.d_array.get(), spmatA.sp_csrind.d_array.get(),
+    spmatA.sp_data.d_array.get(), B, C);
+    } else {
+    csrspmm_seqreduce_rowbalance_cg_kernel<float, 1<<tile_factor ><<<gridDim, blockDim>>>(
+    spmatA.nrow, N, spmatA.ncol, spmatA.sp_csrptr.d_array.get(), spmatA.sp_csrind.d_array.get(),
+    spmatA.sp_data.d_array.get(), B, C);
+  }
+}
+
 
 #endif

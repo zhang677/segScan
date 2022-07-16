@@ -590,6 +590,51 @@ csrspmm_rowcaching_nnzbalance_kernel<1, 4>
 }
 }
 
+__global__ void
+csrspmm_seqreduce_rowbalance_kernel(const int nr, const int nv, const int nc,
+                                    const int rowPtr[], const int colIdx[],
+                                    const float values[], const float dnInput[],
+                                    float dnOutput[]) {
+  int row_tile = blockDim.y;
+  int subwarp_id = threadIdx.y;
+  int stride = row_tile * gridDim.x;
+  int row = blockIdx.x * row_tile + subwarp_id;
+  int v_id = (blockIdx.y * blockDim.x) + threadIdx.x;
+  dnInput += v_id;
+  dnOutput += v_id;
+
+  float res = 0, val;
+  int col;
+  for (; row < nr; row += stride) {
+
+    int start = __ldg(rowPtr + row);
+    int end = __ldg(rowPtr + row + 1);
+    for (int p = start; p < end; p++) {
+      col = __ldg(colIdx + p);
+      val = __guard_load_default_one<float>(values, p);
+      res += val * __ldg(dnInput + col * nv);
+    }
+    dnOutput[row * nv] = res;
+  }
+}
+
+template <typename Index, typename DType>
+void csrspmm_seqreduce_rowbalance(const SpMatCsrDescr_t<Index, DType>& spmatA, 
+  const int N, const DType *B, DType *C) {
+  int Mdim_worker = spmatA.nrow;
+  int Ndim_worker = N;
+  int Ndim_threadblock = CEIL(Ndim_worker, RefThreadPerBlock);
+  int Ndim_thread_per_tb = min(Ndim_worker, RefThreadPerBlock);
+  int Mdim_thread_per_tb = CEIL(RefThreadPerBlock, Ndim_thread_per_tb);
+  int Mdim_threadblock = CEIL(Mdim_worker, Mdim_thread_per_tb);
+
+  dim3 gridDim(Mdim_threadblock, Ndim_threadblock, 1);
+  dim3 blockDim(Ndim_thread_per_tb, Mdim_thread_per_tb, 1);
+
+  csrspmm_seqreduce_rowbalance_kernel<<<gridDim, blockDim>>>(
+  spmatA.nrow, N, spmatA.ncol, spmatA.sp_csrptr.d_array.get(), spmatA.sp_csrind.d_array.get(),
+  spmatA.sp_data.d_array.get(), B, C);
+}
 
 
 template <typename Index, typename DType>
