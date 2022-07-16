@@ -559,9 +559,6 @@ int group_size = 1<<group_factor;
 int coarsen_factor = min(CEIL(N, group_size), CoarsenFactor);
 int Ndim_threadblock = CEIL(N, (group_size * coarsen_factor));
 
-
-// int Nnzdim_threadblock = CEIL(spmatA.nnz, Nnzdim_warp_per_tb * 32 *
-// thread_nz );
 float block_factor = (float)block_numer / (float)block_denom;
 int Nnzdim_threadblock = (float)spmatA.nrow * block_factor;
 
