@@ -55,6 +55,32 @@ int main(int argc, const char **argv) {
             H.sp_csrind.h_array.get(), H.sp_data.h_array.get(),
             in_feature.h_array.get(), out_ref.h_array.get());
         out_feature.reset();
+        csrspmm_parreduce_nnzbalance<Index,DType>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        checkSpMMsuffix;
+        csrspmm_rowcaching_nnzbalance_cg<Index,DType,4,5,256,1,1,1>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        checkSpMMsuffix;
+        csrspmm_rowcaching_nnzbalance_cg<Index,DType,2,5,256,1,1,1>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        checkSpMMsuffix;
+        csrspmm_rowcaching_nnzbalance_cg<Index,DType,1,5,256,1,1,1>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        checkSpMMsuffix;
+        csrspmm_rowcaching_nnzbalance_cg<Index,DType,4,4,256,1,1,1>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        checkSpMMsuffix;
+        csrspmm_rowcaching_nnzbalance_cg<Index,DType,2,4,256,1,1,1>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        checkSpMMsuffix;
+        csrspmm_rowcaching_nnzbalance_cg<Index,DType,1,4,256,1,1,1>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        checkSpMMsuffix;
+        csrspmm_rowcaching_nnzbalance_cg<Index,DType,4,3,256,1,1,1>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        checkSpMMsuffix;
+        csrspmm_rowcaching_nnzbalance_cg<Index,DType,2,3,256,1,1,1>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        checkSpMMsuffix;
+        csrspmm_rowcaching_nnzbalance_cg<Index,DType,1,3,256,1,1,1>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        checkSpMMsuffix;
+        csrspmm_rowcaching_nnzbalance_cg<Index,DType,4,3,256,1,1,1>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        checkSpMMsuffix;
+        csrspmm_rowcaching_nnzbalance_cg<Index,DType,2,3,256,1,1,1>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        checkSpMMsuffix;
+        csrspmm_rowcaching_nnzbalance_cg<Index,DType,1,3,256,1,1,1>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
+        checkSpMMsuffix;
         // 256
         /*
         csrspmm_parreduce_rowbalance<Index,DType>(H, feature_size, in_feature.d_array.get(),out_feature.d_array.get());
