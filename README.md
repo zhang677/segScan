@@ -40,6 +40,7 @@ Execution time difference is with in 0.5%
 | 12month1    |     4       |       5     | 128 | (1/16,1)|
 
 4. Results of acceleration brought by tuning
+
 ebpr
 
 | Hardware | mean | std | geomean | N | 
@@ -54,12 +55,13 @@ ebpr
 rbpr
 
 | Hardware | mean | std | geomean | max | N | 
-| :---:    | :----:| :---:| :---:| :---:| 
+| :---:    | :----:| :---:| :---:| :---:|  :---:| 
 | 3090 | 2.448 | 0.886 | 2.277 | 4.384 | 128 |
 | 2080 | 1.853 | 0.533 | 1.777 | 3.679 | 128 |
 | V100 | 1.663 | 0.452 | 1.602 | 2.903 | 128 |
 
 5. Best result vs. cuSPARSE
+
 ebpr
 
 | Hardware | mean | std | geomean | N | 
@@ -80,6 +82,7 @@ rbpr
 | V100 | 0.391 | 0.133 | 0.374 | 2.682 | cop20k_A | 128 |
 
 6. Dynamic vs. static
+
 ebpr
 
 | Hardware | mean | std | geomean | N | Best static |
