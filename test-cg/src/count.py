@@ -9,34 +9,41 @@ df = pd.read_csv(fileName)
 lines = df.shape[0]
 #actions = 60
 dataset_num = (int)(lines/actions)
-for k in range(actions-3):
-    #min_actions = []
-    ratios = []
-    #ratios_cu = []
-    min_datasets = {}
-    for i in range(actions):
-        min_datasets[i] = []
-    for i in range(dataset_num):
-        times = []
-        cuspt = 0
-        for l in range(actions):
-            if (l<3):
-                cuspt += df.loc[i*actions+l].Time
-            else : # Depends on where cusparse results are recorded
-                times.append(df.loc[i*actions+l].Time)
-        #min_action = times.index(min(times))+3
-        #min_actions.append(min_action)
-        #min_datasets[min_action].append(df.loc[i*actions].dataset)
-        ratios.append(times[k]/min(times))
-        #ratios_cu.append(cuspt/min(times))
-    #hist = []
-    #for i in range(actions):
-    #    hist.append(min_actions.count(i))
-    #print(hist)
-    print(k)
-    print(np.mean(ratios))
-    print(np.std(ratios))
-    print(gmean(ratios))
-    #print(np.mean(ratios_cu))
-    #print(np.std(ratios_cu))
-    #print(gmean(ratios_cu))
+min_actions = []
+ratios = []
+ratios_cu = []
+min_datasets = {}
+datasets = []
+for i in range(actions):
+    min_datasets[i] = []
+k=25
+for i in range(dataset_num):
+    times = []
+    cuspt = 0
+    for l in range(actions):
+        if (l<3):
+            cuspt += df.loc[i*actions+l].Time
+        else : # Depends on where cusparse results are recorded
+            times.append(df.loc[i*actions+l].Time)
+    min_action = times.index(min(times))+3
+    min_actions.append(min_action)
+    datasets.append(df.loc[i*actions].dataset)
+    #min_datasets[min_action].append(df.loc[i*actions].dataset)
+    ratios.append(times[k]/min(times))
+    ratios_cu.append(cuspt/min(times))
+hist = []
+for i in range(actions):
+    hist.append(min_actions.count(i))
+print(hist)
+print(k)
+print(max(ratios))
+print(datasets[ratios.index(max(ratios))])
+print(np.mean(ratios))
+print(np.std(ratios))
+print(gmean(ratios))
+print(max(ratios_cu))
+print(datasets[ratios_cu.index(max(ratios_cu))])
+print(len([i for i  in ratios_cu if i >1]))
+print(np.mean(ratios_cu))
+print(np.std(ratios_cu))
+print(gmean(ratios_cu))

@@ -568,8 +568,13 @@ dim3 blockDim(RefThreadPerBlock, 1, 1);
 size_t smem_size = (2 * sizeof(int) + sizeof(float)) * thread_per_block;
 
 // simple heuristic
-
-if (coarsen_factor == 4) {
+if (coarsen_factor == 8) {
+csrspmm_rowcaching_nnzbalance_cg_kernel<8, ThreadNz, 1<<group_factor >
+<<<gridDim, blockDim, smem_size>>>(spmatA.nrow, N, spmatA.ncol,
+            spmatA.nnz, spmatA.sp_csrptr.d_array.get(), spmatA.sp_csrind.d_array.get(),
+            spmatA.sp_data.d_array.get(), B, C);
+}
+else if (coarsen_factor == 4) {
 csrspmm_rowcaching_nnzbalance_cg_kernel<4, ThreadNz, 1<<group_factor >
 <<<gridDim, blockDim, smem_size>>>(spmatA.nrow, N, spmatA.ncol,
             spmatA.nnz, spmatA.sp_csrptr.d_array.get(), spmatA.sp_csrind.d_array.get(),
