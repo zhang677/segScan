@@ -4,6 +4,7 @@ from scipy.stats import gmean
 import sys
 fileName = sys.argv[1]
 actions = int(sys.argv[2])
+k = int(sys.argv[3])
 #fileName = '../tables/3090/0708-003206-3090.csv'
 df = pd.read_csv(fileName)
 lines = df.shape[0]
@@ -16,7 +17,7 @@ min_datasets = {}
 datasets = []
 for i in range(actions):
     min_datasets[i] = []
-k=3
+
 for i in range(dataset_num):
     times = []
     cuspt = 0
