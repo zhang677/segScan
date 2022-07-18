@@ -16,7 +16,7 @@ min_datasets = {}
 datasets = []
 for i in range(actions):
     min_datasets[i] = []
-k=25
+k=3
 for i in range(dataset_num):
     times = []
     cuspt = 0
@@ -41,9 +41,11 @@ print(datasets[ratios.index(max(ratios))])
 print(np.mean(ratios))
 print(np.std(ratios))
 print(gmean(ratios))
+print(len([i for i  in ratios_cu if i >1]))
+print([datasets[i] for (i,d) in enumerate(ratios_cu) if d > 1])
+print([i for i in ratios_cu if i > 1])
 print(max(ratios_cu))
 print(datasets[ratios_cu.index(max(ratios_cu))])
-print(len([i for i  in ratios_cu if i >1]))
 print(np.mean(ratios_cu))
 print(np.std(ratios_cu))
 print(gmean(ratios_cu))
