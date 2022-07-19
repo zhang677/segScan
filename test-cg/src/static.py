@@ -26,11 +26,10 @@ for k in range(actions-3):
             else : # Depends on where cusparse results are recorded
                 times.append(df.loc[i*actions+l].Time)
         ratios.append(times[k]/min(times))
-    print(k)
     means.append(np.mean(ratios))
     stds.append(np.std(ratios))
     gmeans.append(gmean(ratios))
 
 epsilon = 0.01
-min_mean = min(means)
-print([(i,d,stds[i],gmeans[i]) for (i,d) in enumerate(means) if abs(min_mean-d) < epsilon])
+min_mean = min(gmeans)
+print([(i,means[i],stds[i],gmeans[i]) for (i,d) in enumerate(gmeans) if abs(min_mean-d) < epsilon])

@@ -37,7 +37,7 @@ elif matrices_dir == '/home/nfs_data/zhanggh/segScan/test-cg/data':
     f.close()
 
 print(input_matrices)
-feature_size = '4'
+feature_size = '64'
 if mode == '0':
     print('==Check Mode==')
     for input_matrix in input_matrices:
