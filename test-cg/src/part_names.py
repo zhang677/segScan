@@ -7,7 +7,7 @@ subprocess.call(cmd, shell=True)
 cmd = 'cd ../../src'
 subprocess.call(cmd, shell=True)
 """
-feature = '64'
+feature = '16'
 feature_str = 3
 f = open('part_names.txt','r')
 lines = f.readlines()

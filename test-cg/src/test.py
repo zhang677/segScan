@@ -23,6 +23,7 @@ matrices_dir = sys.argv[1]
 mode = sys.argv[2]
 results_dir = sys.argv[3]
 hardware = sys.argv[4]
+feature_size = sys.argv[5]
 prof_dir = '/home/nfs_data/zhanggh/segScan/test-cg/profile'
 input_matrices = []
 if matrices_dir == '/home/nfs_data/datasets/sparse_mat':
@@ -37,7 +38,7 @@ elif matrices_dir == '/home/nfs_data/zhanggh/segScan/test-cg/data':
     f.close()
 
 print(input_matrices)
-feature_size = '64'
+
 if mode == '0':
     print('==Check Mode==')
     for input_matrix in input_matrices:

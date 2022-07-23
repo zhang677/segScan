@@ -64,8 +64,6 @@ __global__ void csrspmm_parreduce_nnzbalance_cg_kernel(
         c[i] = buffer[i] * v;
         }
         
-
-
         // reduction
         int row_intv = group.shfl(row, group.size()-1) - group.shfl(row, 0);
         if (row_intv == 0) {
