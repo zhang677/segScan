@@ -26,7 +26,7 @@ for i in range(dataset_num):
             cuspt += df.loc[i*actions+l].Time
         else : # Depends on where cusparse results are recorded
             times.append(df.loc[i*actions+l].Time)
-    min_action = times.index(min(times))+3
+    min_action = times.index(min(times))
     min_actions.append(min_action)
     datasets.append(df.loc[i*actions].dataset)
     #min_datasets[min_action].append(df.loc[i*actions].dataset)
