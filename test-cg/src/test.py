@@ -11,7 +11,7 @@ def execute_cmd(cmd):
 
 def device_num(dev):
     if dev=='3090':
-        return '0'
+        return '1'
     elif dev=='2080':
         return '3'
     elif dev=='V100':
@@ -32,7 +32,7 @@ if matrices_dir == '/home/nfs_data/datasets/sparse_mat':
     input_matrices.sort()
     f.close()
 elif matrices_dir == '/home/nfs_data/zhanggh/segScan/test-cg/data':
-    f = open('part_names.txt','r')
+    f = open('check_names.txt','r')
     input_matrices = f.readline().split(',')
     input_matrices.sort()
     f.close()
