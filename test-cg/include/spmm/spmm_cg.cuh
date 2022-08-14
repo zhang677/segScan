@@ -184,7 +184,7 @@ void csrspmm_parreduce_nnzbalance_cg(SpMatCsrDescr_t<Index, DType>& spmatA,
     int Nnzdim_worker = (float)spmatA.nrow * block_factor;
     // partition large-N and map to blockdim.y to help cache performance
     int tile_size = 1<<tile_factor;
-    int Ndim_threadblock = CEIL(N, tile_size); // 1
+    int Ndim_threadblock = CEIL(N, tile_size); //
     int Ndim_warp_per_tb = min(N, tile_size) / coarsen_factor; // 32
 
     int ref_warp_per_tb = thread_per_block / tile_size; // 512/128 = 4 
