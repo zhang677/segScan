@@ -20,26 +20,29 @@ int main(int argc, const char **argv) {
             INT_ARG("-N", N);
         #undef INT_ARG
     }
-
     std::vector<int> index;
     int dst_len = generateIndex(range, max_seg, nnz, index);
+    std::cout << "range = " << range << ", nnz = " << nnz << ", max_seg = " << max_seg << ", N = " << N << ", dst_len = " << dst_len << std::endl;
     std::vector<float> src;
     generateSrc(nnz, N, src);
-    float dst[dst_len * N];
+    std::vector<float> dst(dst_len * N, 0);
     // Copy the dst to GPU
     float *d_src, *d_dst;
     int *d_index;
-    cudaMalloc((void **)&d_src, sizeof(float) * N * nnz);
-    cudaMalloc((void **)&d_dst, sizeof(float) * N * dst_len);
-    cudaMalloc((void **)&d_index, sizeof(int) * nnz);
-    cudaMemcpy(d_src, src.data(), sizeof(float) * N * nnz, cudaMemcpyHostToDevice);
-    cudaMemcpy(d_index, index.data(), sizeof(int) * nnz, cudaMemcpyHostToDevice);
-    cudaMemcpy(d_dst, dst, sizeof(float) * N * dst_len, cudaMemcpyHostToDevice);
+    checkCudaError(cudaMalloc((void **)&d_src, sizeof(float) * N * nnz));
+    checkCudaError(cudaMalloc((void **)&d_dst, sizeof(float) * N * dst_len));
+    checkCudaError(cudaMalloc((void **)&d_index, sizeof(int) * nnz));
+    checkCudaError(cudaMemcpy((void*)d_src, (void*)src.data(), sizeof(float) * N * nnz, cudaMemcpyHostToDevice));
+    checkCudaError(cudaMemcpy((void*)d_index, (void*)index.data(), sizeof(int) * nnz, cudaMemcpyHostToDevice));
+    checkCudaError(cudaMemcpy((void*)d_dst, (void*)dst.data(), sizeof(float) * N * dst_len, cudaMemcpyHostToDevice));
     // Call the kernel
     segment_coo<float,int,5,256,5,1,16>(d_src, d_index, nnz, N, dst_len, d_dst);
     // Copy the dst back to CPU
-    cudaMemcpy(dst, d_dst, sizeof(float) * N * dst_len, cudaMemcpyDeviceToHost);
+    checkCudaError(cudaMemcpy((void*)dst.data(), (void*)d_dst, sizeof(float) * N * dst_len, cudaMemcpyDeviceToHost));
     // Check the result
-    checkSegscan(dst, src.data(), index.data(), nnz, N, dst_len);
+    checkSegscan(dst.data(), src.data(), index.data(), nnz, N, dst_len);
+    checkCudaError(cudaFree((void *)d_src));
+    checkCudaError(cudaFree((void *)d_dst));
+    checkCudaError(cudaFree((void *)d_index));
     return 0;
 }

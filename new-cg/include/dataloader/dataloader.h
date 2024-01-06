@@ -24,7 +24,7 @@ int generateIndex(int range, int max_seg, int total_count, std::vector<int>& res
     // max_seg: Maximum repetition `mi` of each element of index `i`
     // avg: Desired average of `mi`
     double avg = static_cast<double>(total_count) / range;
-    result.reserve(total_count);
+    result.resize(total_count);
 
     std::default_random_engine generator;
     std::normal_distribution<double> distribution(avg, avg/2); // mean max_seg/2, std dev max_seg/4

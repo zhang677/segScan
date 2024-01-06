@@ -23,6 +23,15 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
   }
 }
 
+#define checkCudaError(a)                                                      \
+  do {                                                                         \
+    if (cudaSuccess != (a)) {                                                  \
+      fprintf(stderr, "Cuda runTime error in line %d of file %s : %s \n",      \
+              __LINE__, __FILE__, cudaGetErrorString(cudaGetLastError()));     \
+      exit(EXIT_FAILURE);                                                      \
+    }                                                                          \
+  } while (0)
+
 template <typename T>
 __device__ __forceinline__ T __guard_load_default_one(const T *base,
                                                       int offset) {
@@ -43,9 +52,9 @@ void segment_coo_sequencial(const ValueType* src, const IndexType* index, const 
 }
 
 void checkSegscan(float* dst, float* src, int* index, int nnz, int N, int dst_len){
-    float* dst_cpu = (float*)malloc(sizeof(float) * N * dst_len);
-    memset(dst_cpu, 0, sizeof(float) * N * dst_len);
-    segment_coo_sequencial(src, index, nnz, N, dst_len, dst_cpu);
+    std::vector<float> dst_cpu(dst_len * N, 0);
+    segment_coo_sequencial(src, index, nnz, N, dst_len, dst_cpu.data());
+    std::cout << "Finish golden" << std::endl;
     for (int i = 0; i < N * dst_len; i++) {
         if (fabs(dst[i] - dst_cpu[i]) > 1e-2 * fabs(dst_cpu[i])) {
             printf("Error[%d][%d]: dst = %f, dst_cpu = %f\n", i / N, i % N, dst[i], dst_cpu[i]);
