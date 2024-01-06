@@ -1,6 +1,7 @@
 #include "../utils/check.cuh"
 #include <cuda.h>
 #include <cooperative_groups.h>
+using namespace cooperative_groups;
 
 /// ge-spmm
 template <typename ValueType, typename IndexType, typename AccessType, int group_size, int tile_size>
@@ -47,7 +48,7 @@ __global__ void segscan_kernel(const ValueType* src, const IndexType* index, con
         if (row_intv == 0) {
             #pragma unroll
             for (int i = 0; i < CoarsenFactor; i++) {
-                for (int k = group.size >> 1; k > 0; k >>= 1) {
+                for (int k = group.size() >> 1; k > 0; k >>= 1) {
                     o[i] += group.shfl_down(o[i], k);
                 }
             } 
@@ -106,7 +107,7 @@ __global__ void segscan_kernel(const ValueType* src, const IndexType* index, con
         if (row_intv == 0) {
             #pragma unroll
             for (int i = 0; i < CoarsenFactor; i++) {
-                for (int k = group.size >> 1; k > 0; k >>= 1) {
+                for (int k = group.size() >> 1; k > 0; k >>= 1) {
                     o[i] += group.shfl_down(o[i], k);
                 }
             } 
@@ -146,7 +147,7 @@ __global__ void segscan_kernel(const ValueType* src, const IndexType* index, con
 
 }
 
-template <typename ValueType, typename IndexType, int group_factor, int tile_factor, int block_numer,int block_denom>
+template <typename ValueType, typename IndexType, int group_factor, int thread_per_block, int tile_factor, int block_numer,int block_denom>
 void segment_coo(const ValueType* src, const IndexType* index, const int nnz, const int N, const int dst_len, ValueType* dst){
     int coarsen_factor = (N % 4 == 0) ? 4 : (N % 2 == 0) ? 2 : 1;
     float block_factor = (float)block_numer / (float)block_denom;
@@ -174,5 +175,10 @@ void segment_coo(const ValueType* src, const IndexType* index, const int nnz, co
         segscan_kernel<ValueType, IndexType, float, 1<<group_factor, 1<<tile_factor ><<<gridDim, blockDim>>>(
             src, index, nnz, N, dst);
     }
+
+    cudaDeviceSynchronize();
+    std::cout<<"("<<gridDim.x<<","<<gridDim.y<<","<<gridDim.z<<")"<<std::endl;
+    std::cout<<"("<<blockDim.x<<","<<blockDim.y<<","<<blockDim.z<<")"<<std::endl;  
+    gpuErrchk(cudaGetLastError());
 
 }

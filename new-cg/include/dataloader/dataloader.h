@@ -1,18 +1,69 @@
 #ifndef DATA_LOADER
 #define DATA_LOADER
 #include "mmio.h"
+#include <random>
+#include <cmath>
+#include <vector>
+#include <iostream>
 #include <boost/algorithm/string.hpp>
 #include <boost/range/algorithm.hpp>
 #include <boost/range/algorithm_ext.hpp>
 #include <boost/range/irange.hpp>
 
-// Load sparse matrix from an mtx file. Only non-zero positions are loaded,
-// and values are dropped.
-void read_mtx_csr(const char *filename, int &nrow, int &nnz,
+void generateSrc(int nnz, int N, std::vector<float>& src) {
+    std::default_random_engine generator;
+    std::uniform_real_distribution<float> dis(0.0, 1.0);
+    src.resize(nnz * N);
+    for (int i = 0; i < nnz * N; ++i) {
+        src[i] = dis(generator);
+    }
+}
+
+int generateIndex(int range, int max_seg, int total_count, std::vector<int>& result) {
+    // range: Elements of index `i` in [0, range)
+    // max_seg: Maximum repetition `mi` of each element of index `i`
+    // avg: Desired average of `mi`
+    double avg = static_cast<double>(total_count) / range;
+    result.reserve(total_count);
+
+    std::default_random_engine generator;
+    std::normal_distribution<double> distribution(avg, avg/2); // mean max_seg/2, std dev max_seg/4
+
+    int current_sum = 0;
+    int dst_len = 0;
+    for (int i = 0; i < range; ++i) {
+        int mi = static_cast<int>(std::round(distribution(generator)));
+
+        // Ensure mi is within bounds
+        if (mi < 0) mi = 0;
+        if (mi >= max_seg) mi = max_seg - 1;
+
+        // Adjust the last element to match the desired total count
+        if (i == range - 1) {
+            mi = total_count - current_sum;
+            if (mi < 0) mi = 0; // Ensure mi is not negative
+            if (mi >= max_seg) mi = max_seg - 1; // Ensure mi is within bounds
+        }
+
+        for (int j = 0; j < mi; ++j) {
+            result.push_back(i);
+        }
+        current_sum += mi;
+        if (mi > 0) dst_len += 1;
+
+        // Early exit if we reached the total count
+        if (current_sum >= total_count) break;
+    }
+    return dst_len;
+}
+
+// Read out the first column of the mtx file and values are dropped.
+void read_mtx_rowid(const char *filename, int &nrow, int &nnz,
                    std::vector<int> &coo_rowind_buffer,
                    int &col, 
                    bool one_based = true) {
   FILE *f;
+  int ncol;
 
   if ((f = fopen(filename, "r")) == NULL) {
     printf("File %s not found", filename);
@@ -122,3 +173,5 @@ void read_mtx_csr(const char *filename, int &nrow, int &nnz,
   nnz = coo_rowind_buffer.size();
   fclose(f);
 }
+
+#endif

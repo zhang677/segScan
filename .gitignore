@@ -4,3 +4,5 @@ test-cg/src/test
 test-cg/profile/
 test-cg/tables/
 test-cg/src/check
+.vscode/
+new-cg/src/objs
