@@ -353,3 +353,210 @@ void segment_coo_new(const ValueType* src, const IndexType* index, const int nnz
     gpuErrchk(cudaGetLastError());
 
 }
+
+template <typename ValueType, typename IndexType, int CoarsenFactor, int ThreadNz, int group_size>
+__global__ void segscan_sr_kernel(const ValueType* src, const IndexType* index, const int nnz, const int N, ValueType* dst) {
+    thread_block_tile<group_size,thread_block> group = tiled_partition<group_size>(this_thread_block());
+    int group_id = group.meta_group_rank();
+    int lane_id = group.thread_rank();
+
+    extern __shared__ uint8_t shared_mem[];
+    IndexType *workspace_rowid = (IndexType*)(shared_mem + group_id * group_size * sizeof(IndexType));// &shared_mem[(group_id * group_size)];
+    IndexType *workspace_colid = (IndexType*)((uint8_t*)workspace_rowid + blockDim.x * sizeof(IndexType)); // workspace_rowid + blockDim.x;
+    ValueType *workspace_data = (ValueType*)((uint8_t*)workspace_colid + blockDim.x * sizeof(ValueType));// (ValueType *)(workspace_colid + blockDim.x); // float and int has the same size
+
+    // get the sparse-value range of this row
+    int global_group_id = blockIdx.x * (blockDim.x / group_size) + group_id;
+    int nz_start = global_group_id * (ThreadNz * group_size);
+
+    // get the dense column offset
+    int col_offset = blockIdx.y * group_size * CoarsenFactor;
+    const ValueType *src_lanes[CoarsenFactor];
+    ValueType *dst_lanes[CoarsenFactor];
+    #pragma unroll
+    for (int i = 0; i < CoarsenFactor; i++) {
+        src_lanes[i] = src + col_offset + lane_id + i * group_size;
+        dst_lanes[i] = dst + col_offset + lane_id + i * group_size;
+    }
+    int ldsrc = N;
+    int lddst = N;
+
+    ValueType o[CoarsenFactor] = {0};
+    int stride = gridDim.x * blockDim.x * ThreadNz;
+
+    if (blockIdx.y == gridDim.y - 1)
+        goto Ndim_Residue;
+
+    for (; nz_start < nnz; nz_start += stride) {
+        // iterate over the segment of this warp
+        for (int tile_base = nz_start; tile_base < min(nz_start + ThreadNz * group_size, nnz); tile_base += group_size) {
+
+            int thread_nz_id = tile_base + lane_id;
+            if (thread_nz_id < nnz) {
+                workspace_colid[lane_id] = thread_nz_id;
+                workspace_data[lane_id] = (ValueType)1;
+            } else {
+                workspace_colid[lane_id] = 0;
+                workspace_data[lane_id] = (ValueType)0;
+            }
+            workspace_rowid[lane_id] = index[thread_nz_id];
+            group.sync();
+
+            // initialize with first value
+            IndexType k = workspace_colid[0];
+            ValueType v = workspace_data[0];
+            #pragma unroll
+            for (int i = 0; i < CoarsenFactor; i++) {
+                o[i] = src_lanes[i][k * ldsrc] * v;
+            }
+            IndexType row_curr = workspace_rowid[0], next_row;
+
+            #pragma unroll
+            for (int pp = 1; pp < group_size; pp++) {
+                next_row = workspace_rowid[pp];
+                if (next_row != row_curr) {
+                    #pragma unroll
+                    for (int i = 0; i < CoarsenFactor; i++) {
+                        atomicAdd(dst_lanes[i] + row_curr * lddst, o[i]);
+                    }
+                    row_curr = next_row;
+                    k = workspace_colid[pp];
+                    v = workspace_data[pp];
+                    #pragma unroll
+                    for (int i = 0; i < CoarsenFactor; i++) {
+                        o[i] = v * src_lanes[i][k * ldsrc];
+                    }
+                } else {
+                    k = workspace_colid[pp];
+                    v = workspace_data[pp];
+                    #pragma unroll
+                    for (int i = 0; i < CoarsenFactor; i++) {
+                        o[i] += v * src_lanes[i][k * ldsrc];
+                    }
+                }
+            }
+            #pragma unroll
+            for (int i = 0; i < CoarsenFactor; i++) {
+                atomicAdd(dst_lanes[i] + row_curr * lddst, o[i]);
+            }
+        }
+    }
+    return;
+
+    Ndim_Residue:
+    int valid_lane_num = CEIL(N - col_offset - lane_id, group_size);
+
+    for (; nz_start < nnz; nz_start += stride) {
+        for (int tile_base = nz_start; tile_base < min(nz_start + ThreadNz * group_size, nnz); tile_base += group_size) {
+            int thread_nz_id = tile_base + lane_id;
+            if (thread_nz_id < nnz) {
+                workspace_colid[lane_id] = thread_nz_id;
+                workspace_data[lane_id] = (ValueType)1;
+            } else {
+                workspace_colid[lane_id] = 0;
+                workspace_data[lane_id] = (ValueType)0;
+            }
+            workspace_rowid[lane_id] = index[thread_nz_id];
+            group.sync();
+
+            // initialize with first value
+            IndexType k = workspace_colid[0];
+            ValueType v = workspace_data[0];
+            #pragma unroll
+            for (int i = 0; i < CoarsenFactor; i++) {
+                if (i < valid_lane_num) {
+                    o[i] = src_lanes[i][k * ldsrc] * v;
+                }
+            }
+            IndexType row_curr = workspace_rowid[0], next_row;
+
+            #pragma unroll
+            for (int pp = 1; pp < group_size; pp++) {
+                next_row = workspace_rowid[pp];
+                if (next_row != row_curr) {
+                    #pragma unroll
+                    for (int i = 0; i < CoarsenFactor; i++) {
+                        if (i < valid_lane_num) {
+                            atomicAdd(dst_lanes[i] + row_curr * lddst, o[i]);
+                        }
+                    }
+                    row_curr = next_row;
+                    k = workspace_colid[pp];
+                    v = workspace_data[pp];
+                    #pragma unroll
+                    for (int i = 0; i < CoarsenFactor; i++) {
+                        if (i < valid_lane_num) {
+                            o[i] = v * src_lanes[i][k * ldsrc];
+                        }
+                    }
+                } else {
+                    k = workspace_colid[pp];
+                    v = workspace_data[pp];
+                    #pragma unroll
+                    for (int i = 0; i < CoarsenFactor; i++) {
+                        if (i < valid_lane_num) {
+                            o[i] += v * src_lanes[i][k * ldsrc];
+                        }
+                    }
+                }
+            }
+            #pragma unroll
+            for (int i = 0; i < CoarsenFactor; i++) {
+                if (i < valid_lane_num) {
+                    atomicAdd(dst_lanes[i] + row_curr * lddst, o[i]);
+                }
+            }
+        }
+    }
+}
+
+template <typename ValueType, typename IndexType, int group_factor, int thread_per_block, int CoarsenFactor, int ThreadNz, int block_numer,int block_denom>
+void segment_coo_sr(const ValueType* src, const IndexType* index, const int nnz, const int N, const int dst_len, ValueType* dst){
+    int group_size = 1<<group_factor;
+    int coarsen_factor = min(CEIL(N, group_size), CoarsenFactor);
+    int Ndim_threadblock = CEIL(N, (group_size * coarsen_factor));
+
+    float block_factor = (float)block_numer / (float)block_denom;
+    int Nnzdim_threadblock = (float)dst_len * block_factor;
+
+    dim3 gridDim(Nnzdim_threadblock, Ndim_threadblock, 1);
+    dim3 blockDim(thread_per_block, 1, 1);
+
+    size_t smem_size = (2 * sizeof(int) + sizeof(float)) * thread_per_block;
+    switch (coarsen_factor) {
+        case 8:
+            segscan_sr_kernel<ValueType, IndexType, 8, ThreadNz, 1 << group_factor ><<<gridDim, blockDim, smem_size>>>(
+                src, index, nnz, N, dst);
+            break;
+        case 7:
+            segscan_sr_kernel<ValueType, IndexType, 7, ThreadNz, 1 << group_factor ><<<gridDim, blockDim, smem_size>>>(
+                src, index, nnz, N, dst);
+            break;
+        case 6:
+            segscan_sr_kernel<ValueType, IndexType, 6, ThreadNz, 1 << group_factor ><<<gridDim, blockDim, smem_size>>>(
+                src, index, nnz, N, dst);
+            break;
+        case 5:
+            segscan_sr_kernel<ValueType, IndexType, 5, ThreadNz, 1 << group_factor ><<<gridDim, blockDim, smem_size>>>(
+                src, index, nnz, N, dst);
+            break;
+        case 4:
+            segscan_sr_kernel<ValueType, IndexType, 4, ThreadNz, 1 << group_factor ><<<gridDim, blockDim, smem_size>>>(
+                src, index, nnz, N, dst);
+            break;
+        case 3:
+            segscan_sr_kernel<ValueType, IndexType, 3, ThreadNz, 1 << group_factor ><<<gridDim, blockDim, smem_size>>>(
+                src, index, nnz, N, dst);
+            break;
+        case 2:
+            segscan_sr_kernel<ValueType, IndexType, 2, ThreadNz, 1 << group_factor ><<<gridDim, blockDim, smem_size>>>(
+                src, index, nnz, N, dst);
+            break;
+        case 1:
+            segscan_sr_kernel<ValueType, IndexType, 1, ThreadNz, 1 << group_factor ><<<gridDim, blockDim, smem_size>>>(
+                src, index, nnz, N, dst);
+            break;
+        default:
+            std::cout<<"CoarsenFactor = "<<coarsen_factor << " is not supported."<<std::endl;   
+    }
+}

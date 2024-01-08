@@ -37,7 +37,8 @@ int main(int argc, const char **argv) {
     checkCudaError(cudaMemcpy((void*)d_dst, (void*)dst.data(), sizeof(float) * N * dst_len, cudaMemcpyHostToDevice));
     // Call the kernel
     // segment_coo<float,int,5,256,5,1,16>(d_src, d_index, nnz, N, dst_len, d_dst);
-    segment_coo_new<float,int,5,256,5,2>(d_src, d_index, nnz, N, dst_len, d_dst);
+    // segment_coo_new<float,int,5,256,5,2>(d_src, d_index, nnz, N, dst_len, d_dst);
+    segment_coo_sr<float,int,4,256,4,1,1,16>(d_src, d_index, nnz, N, dst_len, d_dst);
     // Copy the dst back to CPU
     checkCudaError(cudaMemcpy((void*)dst.data(), (void*)d_dst, sizeof(float) * N * dst_len, cudaMemcpyDeviceToHost));
     // Check the result
