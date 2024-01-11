@@ -546,10 +546,13 @@ __global__ void segscan_sr_noshmem_kernel(const ValueType* src, const IndexType*
         dst_lanes[i] = dst + col_offset + lane_id + i * group_size;
     }
 
+    int thread_nz_id;
+    IndexType k, curr_row, next_row;
+    ValueType v;
     for (; nz_start < nnz; nz_start += stride) {
         for (int tile_base = nz_start; tile_base < min(nz_start + ThreadNz * group_size, nnz); tile_base += group_size) {
             for (int g = 0; g < group_size; g++) {
-                int thread_nz_id = tile_base + g;
+                thread_nz_id = tile_base + g;
                 if (thread_nz_id < nnz) {
                     rowids[g] = index[thread_nz_id];
                     colids[g] = thread_nz_id;
@@ -560,8 +563,9 @@ __global__ void segscan_sr_noshmem_kernel(const ValueType* src, const IndexType*
                     data[g] = (ValueType)0;
                 }
             }
-            IndexType k = colids[0], curr_row = rowids[0], next_row;
-            ValueType v = data[0];
+            curr_row = rowids[0];
+            k = colids[0];
+            v = data[0];
             // initialize with first value
             #pragma unroll
             for (int i = 0; i < valid_lane_num; i++) {
