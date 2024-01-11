@@ -32,6 +32,7 @@ int main(int argc, const char **argv) {
     }
     std::vector<int> index;
     int dst_len = generateIndex(range, min_seg, max_seg, nnz, cv, index);
+    print_group_index(16, index);
     std::vector<float> src;
     generateSrc(nnz, N, src);
     std::vector<float> dst(range * N, 0);
@@ -48,7 +49,8 @@ int main(int argc, const char **argv) {
     // segment_coo<float,int,5,256,5,1,16>(d_src, d_index, nnz, N, dst_len, d_dst);
     // segment_coo_new<float,int,5,256,5,2>(d_src, d_index, nnz, N, dst_len, d_dst);
     // segment_coo_sr<float,int,4,256,4,1,1,16>(d_src, d_index, nnz, N, d_dst);
-    segment_coo_noshmem_sr<float,int,4,256,4,2,1,16>(d_src, d_index, nnz, N, d_dst);
+    // segment_coo_noshmem_sr<float,int,4,256,4,2,1,16>(d_src, d_index, nnz, N, d_dst);
+    segment_coo_noshmem_lessatom_sr<float,int,4,256,4,1,1,16>(d_src, d_index, nnz, N, d_dst);
     // Copy the dst back to CPU
     checkCudaError(cudaMemcpy((void*)dst.data(), (void*)d_dst, sizeof(float) * N * range, cudaMemcpyDeviceToHost));
     // Check the result

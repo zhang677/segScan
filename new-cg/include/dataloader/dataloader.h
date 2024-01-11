@@ -10,6 +10,17 @@
 #include <boost/range/algorithm_ext.hpp>
 #include <boost/range/irange.hpp>
 
+void print_group_index(int group_size, std::vector<int>& index) {
+    std::cout << "group_size = " << group_size << " index length = " << index.size() << std::endl;
+    for (int i = 0; i < index.size(); ++i) {
+        if (i % group_size == 0) {
+            std::cout << std::endl;
+        }
+        std::cout << index[i] << " ";
+    }
+    std::cout << std::endl;
+}
+
 void generateSrc(int nnz, int N, std::vector<float>& src) {
     std::default_random_engine generator;
     std::uniform_real_distribution<float> dis(0.0, 1.0);
@@ -40,12 +51,10 @@ int generateIndex(int range, int min_seg, int max_seg, int total_count, double c
         // Adjust the last element to match the desired total count
         if (i == range - 1) {
             mi = total_count - current_sum;
-            mi = std::max(mi, min_seg);
-            mi = std::min(mi, max_seg);
         }
 
         for (int j = 0; j < mi; ++j) {
-            result.push_back(i);
+            result[current_sum + j] = i;
         }
         current_sum += mi;
         if (mi > 0) dst_len += 1;
