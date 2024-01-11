@@ -785,38 +785,37 @@ void segment_coo_noshmem_sr(const ValueType* src, const IndexType* index, const 
     dim3 gridDim(Nnzdim_threadblock, Ndim_threadblock, 1);
     dim3 blockDim(thread_per_block, 1, 1);
 
-    size_t smem_size = (2 * sizeof(int) + sizeof(float)) * thread_per_block;
     switch (coarsen_factor) {
         case 8:
-            segscan_sr_noshmem_kernel<ValueType, IndexType, 8, ThreadNz, 1 << group_factor ><<<gridDim, blockDim, smem_size>>>(
+            segscan_sr_noshmem_kernel<ValueType, IndexType, 8, ThreadNz, 1 << group_factor ><<<gridDim, blockDim>>>(
                 src, index, nnz, N, dst);
             break;
         case 7:
-            segscan_sr_noshmem_kernel<ValueType, IndexType, 7, ThreadNz, 1 << group_factor ><<<gridDim, blockDim, smem_size>>>(
+            segscan_sr_noshmem_kernel<ValueType, IndexType, 7, ThreadNz, 1 << group_factor ><<<gridDim, blockDim>>>(
                 src, index, nnz, N, dst);
             break;
         case 6:
-            segscan_sr_noshmem_kernel<ValueType, IndexType, 6, ThreadNz, 1 << group_factor ><<<gridDim, blockDim, smem_size>>>(
+            segscan_sr_noshmem_kernel<ValueType, IndexType, 6, ThreadNz, 1 << group_factor ><<<gridDim, blockDim>>>(
                 src, index, nnz, N, dst);
             break;
         case 5:
-            segscan_sr_noshmem_kernel<ValueType, IndexType, 5, ThreadNz, 1 << group_factor ><<<gridDim, blockDim, smem_size>>>(
+            segscan_sr_noshmem_kernel<ValueType, IndexType, 5, ThreadNz, 1 << group_factor ><<<gridDim, blockDim>>>(
                 src, index, nnz, N, dst);
             break;
         case 4:
-            segscan_sr_noshmem_kernel<ValueType, IndexType, 4, ThreadNz, 1 << group_factor ><<<gridDim, blockDim, smem_size>>>(
+            segscan_sr_noshmem_kernel<ValueType, IndexType, 4, ThreadNz, 1 << group_factor ><<<gridDim, blockDim>>>(
                 src, index, nnz, N, dst);
             break;
         case 3:
-            segscan_sr_noshmem_kernel<ValueType, IndexType, 3, ThreadNz, 1 << group_factor ><<<gridDim, blockDim, smem_size>>>(
+            segscan_sr_noshmem_kernel<ValueType, IndexType, 3, ThreadNz, 1 << group_factor ><<<gridDim, blockDim>>>(
                 src, index, nnz, N, dst);
             break;
         case 2:
-            segscan_sr_noshmem_kernel<ValueType, IndexType, 2, ThreadNz, 1 << group_factor ><<<gridDim, blockDim, smem_size>>>(
+            segscan_sr_noshmem_kernel<ValueType, IndexType, 2, ThreadNz, 1 << group_factor ><<<gridDim, blockDim>>>(
                 src, index, nnz, N, dst);
             break;
         case 1:
-            segscan_sr_noshmem_kernel<ValueType, IndexType, 1, ThreadNz, 1 << group_factor ><<<gridDim, blockDim, smem_size>>>(
+            segscan_sr_noshmem_kernel<ValueType, IndexType, 1, ThreadNz, 1 << group_factor ><<<gridDim, blockDim>>>(
                 src, index, nnz, N, dst);
             break;
         default:
@@ -836,38 +835,37 @@ void segment_coo_noshmem_lessatom_sr(const ValueType* src, const IndexType* inde
     dim3 gridDim(Nnzdim_threadblock, Ndim_threadblock, 1);
     dim3 blockDim(thread_per_block, 1, 1);
 
-    size_t smem_size = (2 * sizeof(int) + sizeof(float)) * thread_per_block;
     switch (coarsen_factor) {
         case 8:
-            segscan_sr_noshmem_lessatom_kernel<ValueType, IndexType, 8, ThreadNz, 1 << group_factor ><<<gridDim, blockDim, smem_size>>>(
+            segscan_sr_noshmem_lessatom_kernel<ValueType, IndexType, 8, ThreadNz, 1 << group_factor ><<<gridDim, blockDim>>>(
                 src, index, nnz, N, dst);
             break;
         case 7:
-            segscan_sr_noshmem_lessatom_kernel<ValueType, IndexType, 7, ThreadNz, 1 << group_factor ><<<gridDim, blockDim, smem_size>>>(
+            segscan_sr_noshmem_lessatom_kernel<ValueType, IndexType, 7, ThreadNz, 1 << group_factor ><<<gridDim, blockDim>>>(
                 src, index, nnz, N, dst);
             break;
         case 6:
-            segscan_sr_noshmem_lessatom_kernel<ValueType, IndexType, 6, ThreadNz, 1 << group_factor ><<<gridDim, blockDim, smem_size>>>(
+            segscan_sr_noshmem_lessatom_kernel<ValueType, IndexType, 6, ThreadNz, 1 << group_factor ><<<gridDim, blockDim>>>(
                 src, index, nnz, N, dst);
             break;
         case 5:
-            segscan_sr_noshmem_lessatom_kernel<ValueType, IndexType, 5, ThreadNz, 1 << group_factor ><<<gridDim, blockDim, smem_size>>>(
+            segscan_sr_noshmem_lessatom_kernel<ValueType, IndexType, 5, ThreadNz, 1 << group_factor ><<<gridDim, blockDim>>>(
                 src, index, nnz, N, dst);
             break;
         case 4:
-            segscan_sr_noshmem_lessatom_kernel<ValueType, IndexType, 4, ThreadNz, 1 << group_factor ><<<gridDim, blockDim, smem_size>>>(
+            segscan_sr_noshmem_lessatom_kernel<ValueType, IndexType, 4, ThreadNz, 1 << group_factor ><<<gridDim, blockDim>>>(
                 src, index, nnz, N, dst);
             break;
         case 3:
-            segscan_sr_noshmem_lessatom_kernel<ValueType, IndexType, 3, ThreadNz, 1 << group_factor ><<<gridDim, blockDim, smem_size>>>(
+            segscan_sr_noshmem_lessatom_kernel<ValueType, IndexType, 3, ThreadNz, 1 << group_factor ><<<gridDim, blockDim>>>(
                 src, index, nnz, N, dst);
             break;
         case 2:
-            segscan_sr_noshmem_lessatom_kernel<ValueType, IndexType, 2, ThreadNz, 1 << group_factor ><<<gridDim, blockDim, smem_size>>>(
+            segscan_sr_noshmem_lessatom_kernel<ValueType, IndexType, 2, ThreadNz, 1 << group_factor ><<<gridDim, blockDim>>>(
                 src, index, nnz, N, dst);
             break;
         case 1:
-            segscan_sr_noshmem_lessatom_kernel<ValueType, IndexType, 1, ThreadNz, 1 << group_factor ><<<gridDim, blockDim, smem_size>>>(
+            segscan_sr_noshmem_lessatom_kernel<ValueType, IndexType, 1, ThreadNz, 1 << group_factor ><<<gridDim, blockDim>>>(
                 src, index, nnz, N, dst);
             break;
         default:
