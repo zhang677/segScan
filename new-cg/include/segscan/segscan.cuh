@@ -528,11 +528,7 @@ __global__ void segscan_sr_noshmem_kernel(const ValueType* src, const IndexType*
     int col_offset = blockIdx.y * group_size * CoarsenFactor;
     const ValueType *src_lanes[CoarsenFactor];
     ValueType *dst_lanes[CoarsenFactor];
-    #pragma unroll
-    for (int i = 0; i < CoarsenFactor; i++) {
-        src_lanes[i] = src + col_offset + lane_id + i * group_size;
-        dst_lanes[i] = dst + col_offset + lane_id + i * group_size;
-    }
+
     int ldsrc = N;
     int lddst = N;
 
@@ -543,6 +539,12 @@ __global__ void segscan_sr_noshmem_kernel(const ValueType* src, const IndexType*
     //     goto Ndim_Residue;
     int valid_lane_num = min(CEIL(N - col_offset - lane_id, group_size), CoarsenFactor);
     if (valid_lane_num == 0) return;
+
+    #pragma unroll
+    for (int i = 0; i < valid_lane_num; i++) {
+        src_lanes[i] = src + col_offset + lane_id + i * group_size;
+        dst_lanes[i] = dst + col_offset + lane_id + i * group_size;
+    }
 
     for (; nz_start < nnz; nz_start += stride) {
         for (int tile_base = nz_start; tile_base < min(nz_start + ThreadNz * group_size, nnz); tile_base += group_size) {
