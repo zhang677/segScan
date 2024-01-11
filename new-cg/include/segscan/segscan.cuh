@@ -148,10 +148,10 @@ __global__ void segscan_kernel(const ValueType* src, const IndexType* index, con
 }
 
 template <typename ValueType, typename IndexType, int group_factor, int thread_per_block, int tile_factor, int block_numer,int block_denom>
-void segment_coo(const ValueType* src, const IndexType* index, const int nnz, const int N, const int dst_len, ValueType* dst){
+void segment_coo(const ValueType* src, const IndexType* index, const int nnz, const int N, ValueType* dst){
     int coarsen_factor = (N % 4 == 0) ? 4 : (N % 2 == 0) ? 2 : 1;
     float block_factor = (float)block_numer / (float)block_denom;
-    int Nnzdim_worker = (float)dst_len * block_factor;
+    int Nnzdim_worker = (float)nnz * block_factor;
     int tile_size = 1<<tile_factor;
     int Ndim_threadblock = CEIL(N, tile_size); //
     int Ndim_warp_per_tb = min(N, tile_size) / coarsen_factor; // 32
@@ -325,7 +325,7 @@ __global__ void segscan_new_kernel(const ValueType* src, const IndexType* index,
 }
 
 template <typename ValueType, typename IndexType, int group_factor, int thread_per_block, int tile_factor, int blockDimY>
-void segment_coo_new(const ValueType* src, const IndexType* index, const int nnz, const int N, const int dst_len, ValueType* dst){
+void segment_coo_new(const ValueType* src, const IndexType* index, const int nnz, const int N, ValueType* dst){
     int coarsen_factor = (N % 4 == 0) ? 4 : (N % 2 == 0) ? 2 : 1;
     // group_size <= tile_size
     int tile_size = 1<<tile_factor;
@@ -511,13 +511,13 @@ __global__ void segscan_sr_kernel(const ValueType* src, const IndexType* index, 
 }
 
 template <typename ValueType, typename IndexType, int group_factor, int thread_per_block, int CoarsenFactor, int ThreadNz, int block_numer,int block_denom>
-void segment_coo_sr(const ValueType* src, const IndexType* index, const int nnz, const int N, const int dst_len, ValueType* dst){
+void segment_coo_sr(const ValueType* src, const IndexType* index, const int nnz, const int N, ValueType* dst){
     int group_size = 1<<group_factor;
     int coarsen_factor = min(CEIL(N, group_size), CoarsenFactor);
     int Ndim_threadblock = CEIL(N, (group_size * coarsen_factor));
 
     float block_factor = (float)block_numer / (float)block_denom;
-    int Nnzdim_threadblock = (float)dst_len * block_factor;
+    int Nnzdim_threadblock = (float)nnz * block_factor;
 
     dim3 gridDim(Nnzdim_threadblock, Ndim_threadblock, 1);
     dim3 blockDim(thread_per_block, 1, 1);
