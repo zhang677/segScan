@@ -706,16 +706,9 @@ __global__ void segscan_sr_noshmem_lessatom_kernel(const ValueType* src, const I
                     }
                 }
             }
-            if (curr_row == start_row || curr_row == end_row) {
-                #pragma unroll
-                for (int i = 0; i < valid_lane_num; i++) {
-                    atomicAdd(dst_lanes[i] + curr_row * lddst, o[i]);
-                }
-            } else {
-                #pragma unroll
-                for (int i = 0; i < valid_lane_num; i++) {
-                    dst_lanes[i][curr_row * lddst] += o[i];
-                }
+            #pragma unroll
+            for (int i = 0; i < valid_lane_num; i++) {
+                atomicAdd(dst_lanes[i] + curr_row * lddst, o[i]);
             }
         }
     }
