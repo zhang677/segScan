@@ -50,7 +50,8 @@ int main(int argc, const char **argv) {
     // segment_coo_new<float,int,5,256,5,2>(d_src, d_index, nnz, N, dst_len, d_dst);
     // segment_coo_sr<float,int,4,256,4,1,1,16>(d_src, d_index, nnz, N, d_dst);
     // segment_coo_noshmem_sr<float,int,4,256,4,2,1,16>(d_src, d_index, nnz, N, d_dst);
-    segment_coo_noshmem_lessatom_sr<float,int,4,256,4,1,1,16>(d_src, d_index, nnz, N, d_dst);
+    // segment_coo_noshmem_lessatom_sr<float,int,4,256,4,1,1,16>(d_src, d_index, nnz, N, d_dst);
+    segment_coo_sorted_sr<float, int, 2, 4, 8, 2, 16>(d_src, d_index, nnz, N, d_dst); 
     // Copy the dst back to CPU
     checkCudaError(cudaMemcpy((void*)dst.data(), (void*)d_dst, sizeof(float) * N * range, cudaMemcpyDeviceToHost));
     // Check the result
